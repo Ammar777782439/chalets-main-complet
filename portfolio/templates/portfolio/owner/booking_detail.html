@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تفاصيل الحجز #{{ booking.id }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-10">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">تفاصيل الحجز #{{ booking.id }}</h1>
+      <a href="{% url 'portfolio:owner_bookings' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">العودة للقائمة</a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <!-- Status Badge -->
+      <div class="p-6 border-b bg-gray-50">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-sm text-gray-600">الحالة:</span>
+            <span class="mr-2 px-3 py-1 rounded-full text-sm font-medium {% if booking.status == 'confirmed' %}bg-green-100 text-green-700{% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+              {{ booking.get_status_display }}
+            </span>
+          </div>
+          <div class="flex gap-2">
+            {% if booking.status == 'pending' %}
+              <form method="post" action="{% url 'portfolio:owner_booking_approve' pk=booking.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">اعتماد الحجز</button>
+              </form>
+              <form method="post" action="{% url 'portfolio:owner_booking_cancel' pk=booking.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">إلغاء الحجز</button>
+              </form>
+            {% elif booking.status == 'confirmed' %}
+              <form method="post" action="{% url 'portfolio:owner_booking_cancel' pk=booking.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">إلغاء الحجز</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking Details -->
+      <div class="p-6 space-y-6">
+        <!-- Property Info -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">معلومات العقار</h2>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="flex items-start gap-4">
+              {% if booking.property.main_image %}
+                <img src="{{ booking.property.main_image.url }}" alt="{{ booking.property.name }}" class="w-24 h-24 rounded-lg object-cover">
+              {% endif %}
+              <div class="flex-1">
+                <h3 class="font-semibold text-gray-900">{{ booking.property.name }}</h3>
+                <p class="text-sm text-gray-600">{{ booking.property.get_property_type_display }}</p>
+                <a href="{% url 'portfolio:property_detail' slug=booking.property.slug %}" class="text-sm text-blue-600 hover:underline">عرض العقار</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">معلومات العميل</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <span class="text-sm text-gray-600">الاسم:</span>
+              <p class="font-medium text-gray-900">{{ booking.customer_name }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <span class="text-sm text-gray-600">رقم الهاتف:</span>
+              <p class="font-medium text-gray-900 direction-ltr text-right">{{ booking.customer_phone }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <span class="text-sm text-gray-600">البريد الإلكتروني:</span>
+              <p class="font-medium text-gray-900">{{ booking.customer_email|default:"غير متوفر" }}</p>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <span class="text-sm text-gray-600">عدد الضيوف:</span>
+              <p class="font-medium text-gray-900">{{ booking.number_of_guests }} ضيف</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking Period -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">فترة الحجز</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% if booking.start_datetime and booking.end_datetime %}
+              <div class="bg-gray-50 rounded-lg p-4">
+                <span class="text-sm text-gray-600">من:</span>
+                <p class="font-medium text-gray-900">{{ booking.start_datetime|date:'Y-m-d H:i' }}</p>
+              </div>
+              <div class="bg-gray-50 rounded-lg p-4">
+                <span class="text-sm text-gray-600">إلى:</span>
+                <p class="font-medium text-gray-900">{{ booking.end_datetime|date:'Y-m-d H:i' }}</p>
+              </div>
+            {% else %}
+              <div class="bg-gray-50 rounded-lg p-4">
+                <span class="text-sm text-gray-600">تاريخ الحجز:</span>
+                <p class="font-medium text-gray-900">{{ booking.booking_date }}</p>
+              </div>
+            {% endif %}
+            <div class="bg-gray-50 rounded-lg p-4">
+              <span class="text-sm text-gray-600">نوع الحجز:</span>
+              <p class="font-medium text-gray-900">{{ booking.get_booking_type_display }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing -->
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">التفاصيل المالية</h2>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-gray-600">المبلغ الإجمالي:</span>
+              <span class="text-2xl font-bold text-gray-900">{{ booking.total_price }} ريال</span>
+            </div>
+            {% if booking.payment_set.exists %}
+              <div class="mt-4 pt-4 border-t border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">حالة الدفع:</h3>
+                {% for payment in booking.payment_set.all %}
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">{{ payment.get_payment_method_display }}</span>
+                    <span class="px-2 py-1 rounded text-xs {% if payment.status == 'completed' %}bg-green-100 text-green-700{% elif payment.status == 'pending' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                      {{ payment.get_status_display }}
+                    </span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Special Requests -->
+        {% if booking.special_requests %}
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">طلبات خاصة</h2>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-gray-700">{{ booking.special_requests }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Timestamps -->
+        <div class="pt-4 border-t border-gray-200">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+            <div>
+              <span>تاريخ الإنشاء:</span>
+              <span class="font-medium text-gray-900">{{ booking.created_at|date:'Y-m-d H:i' }}</span>
+            </div>
+            <div>
+              <span>آخر تحديث:</span>
+              <span class="font-medium text-gray-900">{{ booking.updated_at|date:'Y-m-d H:i' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

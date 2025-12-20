@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}إنشاء حساب جديد - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-xl p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">إنشاء حساب جديد</h2>
+                <p class="text-gray-600">انضم إلينا واحجز قاعتك المثالية</p>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.full_name.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.full_name.label }}</span>
+                    </label>
+                    {{ form.full_name }}
+                    {% if form.full_name.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.full_name.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.username.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.username.label }}</span>
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.username.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.email.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.email.label }}</span>
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.phone_number.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.phone_number.label }}</span>
+                    </label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.phone_number.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.password1.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.password1.label }}</span>
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.password1.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.password2.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.password2.label }}</span>
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.password2.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    إنشاء الحساب
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    لديك حساب بالفعل؟
+                    <a href="{% url 'accounts:login' %}" class="link link-primary font-medium">
+                        تسجيل الدخول
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

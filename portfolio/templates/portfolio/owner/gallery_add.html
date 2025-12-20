@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إضافة صورة للمعرض{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-10">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-xl shadow p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold text-gray-900">إضافة صورة للمعرض</h1>
+        <a href="{% url 'portfolio:owner_properties' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">رجوع</a>
+      </div>
+
+      <form method="post" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="id_image">الصورة</label>
+          {{ form.image }}
+          {% for err in form.image.errors %}
+            <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="id_caption">وصف الصورة (اختياري)</label>
+          {{ form.caption }}
+          {% for err in form.caption.errors %}
+            <p class="text-sm text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="submit" class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">حفظ</button>
+          <a href="{% url 'portfolio:owner_properties' %}" class="px-6 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">إلغاء</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

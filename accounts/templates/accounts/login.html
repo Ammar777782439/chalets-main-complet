@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}تسجيل الدخول - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-xl p-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">تسجيل الدخول</h2>
+                <p class="text-gray-600">مرحباً بعودتك! سجل دخولك للمتابعة</p>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.username.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.username.label }}</span>
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.username.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.password.id_for_label }}">
+                        <span class="label-text font-medium">{{ form.password.label }}</span>
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="form-control">
+                        <label class="label cursor-pointer">
+                            <input type="checkbox" name="remember_me" class="checkbox checkbox-primary" />
+                            <span class="label-text mr-2">تذكرني</span>
+                        </label>
+                    </div>
+                    <a href="{% url 'accounts:password_reset' %}" class="link link-primary text-sm">
+                        نسيت كلمة المرور؟
+                    </a>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    تسجيل الدخول
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    ليس لديك حساب؟
+                    <a href="{% url 'accounts:register' %}" class="link link-primary font-medium">
+                        إنشاء حساب جديد
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

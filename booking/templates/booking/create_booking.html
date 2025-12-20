@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}صفحة غير متاحة{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-16">
+    <div class="max-w-2xl mx-auto text-center px-4">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">هذه الصفحة لم تعد متاحة</h1>
+        <p class="text-gray-600 mb-8">تم نقل إنشاء الحجز ليكون عبر العقارات فقط.</p>
+        <a href="{% url 'portfolio:property_list' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+            تصفح العقارات
+        </a>
+    </div>
+</div>
+
+<style>
+/* Custom styles for form inputs */
+/* لا توجد أنماط خاصة مطلوبة هنا */
+</style>
+{% endblock %}

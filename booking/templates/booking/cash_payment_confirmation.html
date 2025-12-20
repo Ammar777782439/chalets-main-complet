@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تأكيد الدفع النقدي{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">الدفع النقدي في المكتب</h1>
+            <p class="text-gray-600">يرجى مراجعة التفاصيل والتأكيد لحجز موعدك</p>
+        </div>
+
+        <!-- Booking Summary -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">ملخص الحجز</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <span class="text-gray-600">العقار:</span>
+                    <span class="font-semibold mr-2">{{ booking.property.name|default:'—' }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">المدة:</span>
+                    {% if booking.start_datetime and booking.end_datetime %}
+                        <span class="font-semibold mr-2">{{ booking.start_datetime|date:"Y/m/d H:i" }} → {{ booking.end_datetime|date:"Y/m/d H:i" }}</span>
+                    {% else %}
+                        <span class="font-semibold mr-2">{{ booking.booking_date }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="text-gray-600">اسم العميل:</span>
+                    <span class="font-semibold mr-2">{{ booking.customer_name }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">رقم الهاتف:</span>
+                    <span class="font-semibold mr-2">{{ booking.customer_phone }}</span>
+                </div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-medium text-gray-700">المبلغ الإجمالي:</span>
+                    <span class="text-2xl font-bold text-blue-600">{{ booking.total_price }} ريال</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-blue-50 rounded-lg p-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-blue-700">العربون ({{ deposit_percent }}%)</span>
+                            <span class="font-bold text-blue-800">{{ deposit_amount }} ريال</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">المتبقي عند الوصول</span>
+                            <span class="font-bold text-gray-900">{{ balance_amount }} ريال</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Office Information -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">معلومات المكتب</h2>
+            <div class="space-y-4">
+                <!-- Address -->
+                <div class="flex items-start space-x-3 space-x-reverse">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">العنوان</h3>
+                        <p class="text-gray-600">شارع الزبيري، حي الحصبة، صنعاء 15563</p>
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="flex items-start space-x-3 space-x-reverse">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">رقم الهاتف</h3>
+                        <p class="text-gray-600 font-mono">+967 1 123 4567</p>
+                    </div>
+                </div>
+
+                <!-- Working Hours -->
+                <div class="flex items-start space-x-3 space-x-reverse">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">ساعات العمل</h3>
+                        <div class="text-gray-600">
+                            <p>السبت - الخميس: 9:00 ص - 9:00 م</p>
+                            <p>الجمعة: 2:00 م - 9:00 م</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Important Instructions -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-yellow-900 mb-3">تعليمات مهمة:</h3>
+            <ul class="space-y-2 text-yellow-800">
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 w-2 h-2 bg-yellow-500 rounded-full mt-2 ml-3"></span>
+                    <span><strong>يجب الدفع خلال 24 ساعة</strong> من تأكيد هذا الحجز وإلا سيتم إلغاؤه تلقائياً</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 w-2 h-2 bg-yellow-500 rounded-full mt-2 ml-3"></span>
+                    <span>أحضر معك بطاقة الهوية الشخصية عند الدفع</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 w-2 h-2 bg-yellow-500 rounded-full mt-2 ml-3"></span>
+                    <span>المبلغ المطلوب بالضبط: <strong>{{ booking.total_price }} ريال</strong></span>
+                </li>
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 w-2 h-2 bg-yellow-500 rounded-full mt-2 ml-3"></span>
+                    <span>سيتم إصدار إيصال رسمي عند الدفع</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Map Placeholder -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">موقع المكتب</h2>
+            <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+                <div class="text-center">
+                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <p class="text-gray-500">خريطة الموقع</p>
+                    <p class="text-sm text-gray-400 mt-1">يمكنك استخدام تطبيقات الخرائط للوصول إلينا</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center space-x-3 space-x-reverse mb-4">
+                    <input type="checkbox" id="terms_agreement" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500" required>
+                    <label for="terms_agreement" class="text-gray-700">
+                        أوافق على الشروط والأحكام وأتعهد بالدفع خلال 24 ساعة
+                    </label>
+                </div>
+                
+                <div class="flex space-x-4 space-x-reverse">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
+                        تأكيد الحجز
+                    </button>
+                    <a href="{% url 'booking:select_payment_method' booking.id %}" class="flex-1 bg-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium text-center hover:bg-gray-400 transition duration-200">
+                        العودة
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

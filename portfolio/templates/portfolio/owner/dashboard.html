@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}لوحة المالك{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">لوحة المالك</h1>
+      <div class="flex gap-2">
+        <a href="{% url 'portfolio:owner_properties' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">عقاراتي</a>
+        <a href="{% url 'portfolio:owner_bookings' %}" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">طلبات الحجز</a>
+        <a href="{% url 'portfolio:owner_amenities' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">مزاياي</a>
+        <a href="{% url 'portfolio:owner_payment_providers' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">وسائط الدفع</a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="text-sm text-gray-500">عدد العقارات</div>
+        <div class="text-2xl font-bold text-gray-900">{{ stats.properties_count }}</div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="text-sm text-gray-500">إجمالي الطلبات</div>
+        <div class="text-2xl font-bold text-gray-900">{{ stats.bookings_count }}</div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="text-sm text-gray-500">قيد الانتظار</div>
+        <div class="text-2xl font-bold text-yellow-600">{{ stats.pending_count }}</div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="text-sm text-gray-500">مؤكد</div>
+        <div class="text-2xl font-bold text-green-600">{{ stats.confirmed_count }}</div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5">
+        <div class="text-sm text-gray-500">الإيراد الإجمالي</div>
+        <div class="text-2xl font-bold text-blue-600">{{ stats.total_revenue }} ريال</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900">آخر الطلبات</h2>
+          <a href="{% url 'portfolio:owner_bookings' %}" class="text-blue-600 text-sm hover:underline">عرض الكل</a>
+        </div>
+        <div class="divide-y">
+          {% for b in recent_bookings %}
+            <div class="py-3 flex items-center justify-between">
+              <div>
+                <div class="font-medium text-gray-900">{{ b.property.name }}</div>
+                <div class="text-sm text-gray-500">{{ b.customer_name }} • {{ b.start_datetime|date:'Y-m-d H:i' }} → {{ b.end_datetime|date:'H:i' }}</div>
+              </div>
+              <div>
+                <span class="text-xs px-2 py-1 rounded-full {% if b.status == 'confirmed' %}bg-green-100 text-green-700{% elif b.status == 'pending' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                  {{ b.get_status_display }}
+                </span>
+              </div>
+            </div>
+          {% empty %}
+            <div class="py-6 text-center text-gray-500">لا توجد طلبات حديثة</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900">عقاراتي</h2>
+          <a href="{% url 'portfolio:owner_properties' %}" class="text-blue-600 text-sm hover:underline">عرض الكل</a>
+        </div>
+        <div class="divide-y">
+          {% for p in properties %}
+            <div class="py-3 flex items-center justify-between">
+              <div>
+                <div class="font-medium text-gray-900">{{ p.name }}</div>
+                <div class="text-sm text-gray-500">{{ p.city }} • {{ p.get_property_type_display }}</div>
+              </div>
+              <a href="{% url 'portfolio:property_detail' slug=p.slug %}" class="text-sm px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">عرض</a>
+            </div>
+          {% empty %}
+            <div class="py-6 text-center text-gray-500">لا توجد عقارات بعد</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

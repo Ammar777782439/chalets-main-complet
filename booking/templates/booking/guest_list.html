@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}قائمة ضيوف الحجز #{{ booking.id|stringformat:"05d" }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">قائمة الضيوف</h1>
+        <p class="text-gray-600">الحجز: <span class="font-semibold">{{ booking.property.name }}</span>
+          {% if booking.start_datetime and booking.end_datetime %}
+            • <span class="font-mono">{{ booking.start_datetime|date:"Y/m/d H:i" }} → {{ booking.end_datetime|date:"Y/m/d H:i" }}</span>
+          {% else %}
+            • <span class="font-mono">{{ booking.booking_date }}</span>
+          {% endif %}
+        </p>
+      </div>
+      <div class="space-x-2 space-x-reverse">
+        <a href="{% url 'booking:booking_success' booking_id=booking.id %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300">رجوع</a>
+        {% if can_download %}
+          <a href="{% url 'booking:guest_list_csv' booking_id=booking.id %}" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">تحميل CSV</a>
+        {% else %}
+          <span class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" title="سيتوفر التنزيل بعد تأكيد الحجز">تحميل CSV</span>
+        {% endif %}
+        <button onclick="window.print()" class="inline-flex items-center px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">طباعة</button>
+      </div>
+    </div>
+
+    {% if guests %}
+      <div class="bg-white rounded-lg shadow p-6 print:shadow-none">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">#</th>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">الاسم</th>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">الرمز</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for g in guests %}
+              <tr>
+                <td class="px-4 py-2 text-gray-900 font-mono">{{ g.serial }}</td>
+                <td class="px-4 py-2 text-gray-900">{{ g.name }}</td>
+                <td class="px-4 py-2">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 font-mono">{{ g.code }}</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-gray-600">لم تقم بإضافة ضيوف بعد.</p>
+      </div>
+    {% endif %}
+
+    <div class="mt-6 text-sm text-gray-500">
+      {% if not can_download %}
+        <p>ملاحظة: سيكون تنزيل القائمة متاحاً بعد <span class="font-semibold">تأكيد الحجز</span> من قبل المالك.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .print\:shadow-none { box-shadow: none !important; }
+  a, button { display: none !important; }
+}
+</style>
+{% endblock %}

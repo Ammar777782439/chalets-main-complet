@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الدفع عبر التحويل البنكي{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">الدفع عبر التحويل البنكي</h1>
+            <p class="text-gray-600">اختر الحساب المناسب وقم بالتحويل ثم أدخل بيانات العملية</p>
+        </div>
+
+        <!-- Booking Summary -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">ملخص الحجز</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <span class="text-gray-600">العقار:</span>
+                    <span class="font-semibold mr-2">{{ booking.property.name|default:'—' }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">المدة:</span>
+                    {% if booking.start_datetime and booking.end_datetime %}
+                        <span class="font-semibold mr-2">{{ booking.start_datetime|date:"Y/m/d H:i" }} → {{ booking.end_datetime|date:"Y/m/d H:i" }}</span>
+                    {% else %}
+                        <span class="font-semibold mr-2">{{ booking.booking_date }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="text-gray-600">المبلغ:</span>
+                    <span class="font-bold text-blue-600 mr-2">{{ booking.total_price }} ريال</span>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-600 ml-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        {% for error in form.non_field_errors %}
+                        <p class="font-medium">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Payment Providers -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">اختر الحساب للتحويل</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% for provider in payment_providers %}
+                    <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 transition duration-200 cursor-pointer provider-card" data-provider-id="{{ provider.id }}">
+                        <label class="cursor-pointer block">
+                            <input type="radio" name="provider_id" value="{{ provider.id }}" class="sr-only provider-radio" {% if selected_provider_id == provider.id %}checked{% endif %}>
+                            <div class="flex items-center space-x-4 space-x-reverse">
+                                <div class="flex-shrink-0">
+                                    {% if provider.icon %}
+                                        <img src="{{ provider.icon.url }}" alt="{{ provider.name }}" class="w-12 h-12 object-contain">
+                                    {% else %}
+                                        <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                            </svg>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-gray-900">{{ provider.name }}</h3>
+                                    <p class="text-gray-600 text-sm mt-1">رقم الحساب:</p>
+                                    <p class="font-mono text-lg font-bold text-blue-600">{{ provider.account_number }}</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <div class="w-5 h-5 border-2 border-gray-300 rounded-full radio-indicator flex items-center justify-center">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full opacity-0 radio-dot"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    {% empty %}
+                    <div class="col-span-2 text-center py-8">
+                        <p class="text-gray-500">لا توجد وسائل دفع متاحة حالياً</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">بيانات التحويل</h2>
+                <div class="space-y-6">
+                    <!-- Transaction ID -->
+                    <div>
+                        <label for="{{ form.transaction_id.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.transaction_id.label }}
+                        </label>
+                        {{ form.transaction_id }}
+                        {% if form.transaction_id.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form.transaction_id.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">رقم العملية الذي يظهر في إشعار التحويل</p>
+                    </div>
+
+                    <!-- Payer Full Name -->
+                    <div>
+                        <label for="{{ form.payer_full_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.payer_full_name.label }}
+                        </label>
+                        {{ form.payer_full_name }}
+                        {% if form.payer_full_name.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form.payer_full_name.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">الاسم الرباعي كما يظهر في الحساب البنكي</p>
+                    </div>
+
+                    <!-- Payer Phone Number -->
+                    <div>
+                        <label for="{{ form.payer_phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ form.payer_phone_number.label }}
+                        </label>
+                        {{ form.payer_phone_number }}
+                        {% if form.payer_phone_number.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {{ form.payer_phone_number.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <p class="mt-1 text-sm text-gray-500">رقم هاتف صاحب الحساب المحول منه</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-blue-900 mb-3">تعليمات مهمة:</h3>
+                <ul class="space-y-2 text-blue-800">
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2 ml-3"></span>
+                        <span>قم بالتحويل للمبلغ المطلوب بالضبط: <strong>{{ booking.total_price }} ريال</strong></span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2 ml-3"></span>
+                        <span>احتفظ بإشعار التحويل وأدخل رقم العملية بدقة</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2 ml-3"></span>
+                        <span>سيتم مراجعة التحويل والتأكيد خلال 24 ساعة</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2 ml-3"></span>
+                        <span>في حالة وجود أي استفسار، يرجى التواصل معنا</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex space-x-4 space-x-reverse">
+                <button type="submit" class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
+                    تأكيد بيانات التحويل
+                </button>
+                <a href="{% url 'booking:select_payment_method' booking.id %}" class="flex-1 bg-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium text-center hover:bg-gray-400 transition duration-200">
+                    العودة
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Custom styles for form inputs */
+input[type="text"],
+input[type="tel"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="tel"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Provider card selection */
+.provider-card.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+.provider-card.selected .radio-indicator {
+    border-color: #3b82f6;
+    background-color: #3b82f6;
+}
+
+.provider-card.selected .radio-dot {
+    opacity: 1;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const providerCards = document.querySelectorAll('.provider-card');
+    const providerRadios = document.querySelectorAll('.provider-radio');
+    
+    // Handle provider selection
+    providerCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const providerId = this.dataset.providerId;
+            const radio = this.querySelector('.provider-radio');
+            
+            // Clear all selections
+            providerCards.forEach(c => c.classList.remove('selected'));
+            providerRadios.forEach(r => r.checked = false);
+            
+            // Select current
+            this.classList.add('selected');
+            radio.checked = true;
+        });
+    });
+    
+    // Set initial selection if any; if none, select first for clarity
+    let anyChecked = false;
+    providerRadios.forEach(radio => {
+        if (radio.checked) {
+            anyChecked = true;
+            radio.closest('.provider-card').classList.add('selected');
+        }
+    });
+    if (!anyChecked && providerRadios.length > 0) {
+        providerRadios[0].checked = true;
+        providerRadios[0].closest('.provider-card').classList.add('selected');
+    }
+});
+</script>
+{% endblock %}

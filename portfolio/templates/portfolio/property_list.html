@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}العقارات (شاليهات/حدائق/استراحات){% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">استعرض الشاليهات والحدائق والاستراحات</h1>
+      <p class="text-gray-600">استخدم الفلاتر للعثور على المكان المناسب وحجزه مباشرة</p>
+    </div>
+    
+    <!-- View Toggle -->
+    <div class="flex items-center justify-end mb-4 gap-2">
+      <form method="get">
+        {% for key, value in request.GET.items %}
+          {% if key != 'view' %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}" />
+          {% endif %}
+        {% endfor %}
+        <input type="hidden" name="view" value="list" />
+        <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium border transition {% if current_view != 'map' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">عرض كشبكة</button>
+      </form>
+      <form method="get">
+        {% for key, value in request.GET.items %}
+          {% if key != 'view' %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}" />
+          {% endif %}
+        {% endfor %}
+        <input type="hidden" name="view" value="map" />
+        <button type="submit" class="px-4 py-2 rounded-lg text-sm font-medium border transition {% if current_view == 'map' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">عرض على الخريطة</button>
+      </form>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="bg-white rounded-xl shadow p-6 mb-8 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.search.label }}</label>
+          {{ search_form.search }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.city.label }}</label>
+          {{ search_form.city }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.radius_km.label }}</label>
+          {{ search_form.radius_km }}
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.booking_type.label }}</label>
+          {{ search_form.booking_type }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.start_datetime.label }}</label>
+            {{ search_form.start_datetime }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.end_datetime.label }}</label>
+            {{ search_form.end_datetime }}
+          </div>
+          <div class="md:col-span-2">
+            <div class="flex items-center gap-2 text-sm">
+              <span class="text-gray-500">اختصارات:</span>
+              <button type="button" id="preset-halfday" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">نصف يوم (13:00 - 18:00)</button>
+              <button type="button" id="preset-overnight" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">مبيت (16:00 - 10:00 +1)</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.amenities.label }}</label>
+          {{ search_form.amenities }}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.min_price.label }}</label>
+            {{ search_form.min_price }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.max_price.label }}</label>
+            {{ search_form.max_price }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.min_capacity.label }}</label>
+            {{ search_form.min_capacity }}
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.max_capacity.label }}</label>
+            {{ search_form.max_capacity }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.min_privacy.label }}</label>
+            {{ search_form.min_privacy }}
+          </div>
+          <div class="flex items-center mt-6">
+            <label class="text-sm font-medium text-gray-700 mr-2">{{ search_form.is_verified_by_platform.label }}</label>
+            {{ search_form.is_verified_by_platform }}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div class="w-64">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.ordering.label }}</label>
+          {{ search_form.ordering }}
+        </div>
+        <div class="flex gap-3">
+          <a href="?" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">إعادة تعيين</a>
+          <button type="submit" class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">تطبيق الفلاتر</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Results (List) -->
+    {% if current_view != 'map' %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for p in properties %}
+      <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+        <div class="relative">
+          {% if p.main_image %}
+            <img src="{{ p.main_image.url }}" alt="{{ p.name }}" class="w-full h-48 object-cover">
+          {% else %}
+            <div class="w-full h-48 bg-gray-200"></div>
+          {% endif %}
+          {% if p.is_verified_by_platform %}
+            <span class="absolute top-3 right-3 bg-green-600 text-white text-xs px-2 py-1 rounded">موثّق</span>
+          {% endif %}
+        </div>
+        <div class="p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-900 truncate">{{ p.name }}</h3>
+            <span class="text-sm text-gray-500">{{ p.get_property_type_display }}</span>
+          </div>
+          <div class="text-sm text-gray-600 flex items-center gap-1">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span>{{ p.city }}</span>
+          </div>
+          <div class="flex items-center gap-1 text-sm text-gray-700">
+            {% with r=p.avg_rating %}
+              {% if r %}
+                {% for i in "12345" %}
+                  {% if forloop.counter <= r %}
+                    <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.802 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118L10 13.347l-2.885 2.134c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L3.48 8.719c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                  {% else %}
+                    <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.802 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118L10 13.347l-2.885 2.134c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L3.48 8.719c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                  {% endif %}
+                {% endfor %}
+                <span class="ml-1">{{ r|floatformat:1 }}</span>
+                <span class="text-gray-500">({{ p.reviews_count|default:"0" }})</span>
+              {% else %}
+                <span class="text-gray-500">لا تقييم</span>
+              {% endif %}
+            {% endwith %}
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center text-sm">
+            <div class="bg-gray-50 rounded p-2">
+              <div class="text-gray-500">بالساعة</div>
+              <div class="font-bold text-blue-600">{{ p.price_per_hour|default:"-" }}</div>
+            </div>
+            <div class="bg-gray-50 rounded p-2">
+              <div class="text-gray-500">نصف يوم</div>
+              <div class="font-bold text-blue-600">{{ p.price_half_day|default:"-" }}</div>
+            </div>
+            <div class="bg-gray-50 rounded p-2">
+              <div class="text-gray-500">اليوم</div>
+              <div class="font-bold text-blue-600">{{ p.price_per_day|default:"-" }}</div>
+            </div>
+          </div>
+          <!-- Top amenities -->
+          <div class="flex flex-wrap gap-2 mt-2">
+            {% for a in p.amenities.all|slice:':3' %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">
+                {% if a.icon_class %}<i class="{{ a.icon_class }} ml-1 text-gray-500"></i>{% endif %}
+                {{ a.name }}
+              </span>
+            {% empty %}
+              <span class="text-xs text-gray-400">لا مزايا</span>
+            {% endfor %}
+          </div>
+          <div class="mt-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-700">خصوصية: {{ p.privacy_rating }}/5</span>
+          </div>
+          <div class="flex gap-3 mt-3">
+            <a href="{% url 'portfolio:property_detail' slug=p.slug %}" class="flex-1 text-center px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">التفاصيل</a>
+            <a href="{% url 'booking:create_property_booking' property_id=p.id %}{% if request.GET.booking_type or request.GET.start_datetime or request.GET.end_datetime %}?{% endif %}{% if request.GET.booking_type %}booking_type={{ request.GET.booking_type }}{% endif %}{% if request.GET.start_datetime %}{% if request.GET.booking_type %}&{% endif %}start={{ request.GET.start_datetime }}{% endif %}{% if request.GET.end_datetime %}{% if request.GET.booking_type or request.GET.start_datetime %}&{% endif %}end={{ request.GET.end_datetime }}{% endif %}"
+               class="flex-1 text-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">احجز الآن</a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-span-3 text-center py-16 bg-white rounded-xl shadow">
+        <p class="text-gray-600">لا توجد نتائج مطابقة للبحث الحالي</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Results (Map) -->
+    {% if current_view == 'map' %}
+      <div id="property-map" class="w-full h-[70vh] rounded-xl shadow bg-white"></div>
+      <script id="properties-json" type="application/json">[
+        {% for p in properties_with_location %}
+        {"id": {{ p.id }}, "name": "{{ p.name|escapejs }}", "lat": {{ p.latitude|default_if_none:'null' }}, "lon": {{ p.longitude|default_if_none:'null' }}, "slug": "{{ p.slug|escapejs }}", "price": "{{ p.price_per_day|default_if_none:'-' }}"}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]</script>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+      <div class="mt-8 flex items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 rounded bg-white border text-gray-700">السابق</a>
+        {% endif %}
+        <span class="px-3 py-1 rounded bg-blue-600 text-white">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 rounded bg-white border text-gray-700">التالي</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    function toLocalDT(val) {
+      const pad = (n) => (n < 10 ? '0' + n : '' + n);
+      const d = val instanceof Date ? val : new Date(val);
+      if (isNaN(d.getTime())) return '';
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+    function getDatePart(input) {
+      const v = input.value;
+      if (v && v.includes('T')) return new Date(v);
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    }
+    const startEl = document.getElementById('id_start_datetime');
+    const endEl = document.getElementById('id_end_datetime');
+    const btnHalf = document.getElementById('preset-halfday');
+    const btnOver = document.getElementById('preset-overnight');
+    if (startEl && endEl && btnHalf) {
+      btnHalf.addEventListener('click', function() {
+        const d = getDatePart(startEl);
+        const s = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 13, 0, 0);
+        const e = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 18, 0, 0);
+        startEl.value = toLocalDT(s);
+        endEl.value = toLocalDT(e);
+      });
+    }
+    if (startEl && endEl && btnOver) {
+      btnOver.addEventListener('click', function() {
+        const d = getDatePart(startEl);
+        const s = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 16, 0, 0);
+        const e = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1, 10, 0, 0);
+        startEl.value = toLocalDT(s);
+        endEl.value = toLocalDT(e);
+      });
+    }
+  })();
+</script>
+{% if current_view == 'map' %}
+<script>
+  (function() {
+    const dataEl = document.getElementById('properties-json');
+    let props = [];
+    if (dataEl) {
+      try { props = JSON.parse(dataEl.textContent || '[]'); } catch (e) { props = []; }
+    }
+
+    const mapEl = document.getElementById('property-map');
+    if (!mapEl) return;
+    const map = L.map(mapEl, { scrollWheelZoom: true });
+    // Default center to Yemen
+    let center = [15.5527, 48.5164];
+    let zoom = 6;
+    // If first property exists, center near it
+    for (let i = 0; i < props.length; i++) {
+      if (props[i].lat && props[i].lon) { center = [props[i].lat, props[i].lon]; zoom = 11; break; }
+    }
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    map.setView(center, zoom);
+
+    const markers = [];
+    props.forEach(p => {
+      if (!p.lat || !p.lon) return;
+      const m = L.marker([p.lat, p.lon]).addTo(map);
+      const popupHtml = `
+        <div class="text-right">
+          <div class="font-bold text-gray-900 mb-1">${p.name}</div>
+          <div class="text-sm text-gray-600 mb-2">السعر/يوم: <span class="font-semibold text-blue-600">${p.price}</span></div>
+          <div class="flex gap-2">
+            <a href="/properties/${p.slug}/" class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs">التفاصيل</a>
+            <a href="/booking/create-property/${p.id}/" class="px-2 py-1 rounded bg-blue-600 text-white text-xs">احجز الآن</a>
+          </div>
+        </div>`;
+      m.bindPopup(popupHtml);
+      markers.push(m);
+    });
+
+    if (markers.length > 1) {
+      const group = L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.2));
+    }
+  })();
+</script>
+{% endif %}
+{% endblock %}

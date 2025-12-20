@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}حجز {{ property.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">حجز {{ property.name }}</h1>
+      <p class="text-gray-600">اختر نوع الحجز والوقت ثم أدخل بياناتك لإتمام الحجز</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Property Information -->
+      <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="aspect-w-16 aspect-h-9">
+          {% if property.main_image %}
+            <img src="{{ property.main_image.url }}" alt="{{ property.name }}" class="w-full h-64 object-cover">
+          {% else %}
+            <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+              <span class="text-gray-500">لا توجد صورة</span>
+            </div>
+          {% endif %}
+        </div>
+        <div class="p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-2">{{ property.name }}</h2>
+          <p class="text-gray-600 mb-4">{{ property.description|truncatewords:25 }}</p>
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">النوع:</span>
+              <span class="font-semibold">{{ property.get_property_type_display }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">السعة:</span>
+              <span class="font-semibold">{{ property.capacity }} شخص</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-sm">
+              <div class="bg-gray-50 rounded p-2 text-center">
+                <div class="text-gray-500">بالساعة</div>
+                <div class="font-bold text-blue-600">{{ property.price_per_hour|default:"-" }}</div>
+              </div>
+              <div class="bg-gray-50 rounded p-2 text-center">
+                <div class="text-gray-500">نصف يوم</div>
+                <div class="font-bold text-blue-600">{{ property.price_half_day|default:"-" }}</div>
+              </div>
+              <div class="bg-gray-50 rounded p-2 text-center">
+                <div class="text-gray-500">اليوم/المبيت</div>
+                <div class="font-bold text-blue-600">{{ property.price_per_day|default:"-" }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Booking Form -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">بيانات الحجز</h2>
+
+        <form method="post" class="space-y-6">
+          {% csrf_token %}
+
+          <!-- Form-level errors (non-field errors) -->
+          {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+              <div class="flex items-start">
+                <svg class="w-5 h-5 text-red-600 ml-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                  {% for error in form.non_field_errors %}
+                    <p class="font-medium">{{ error }}</p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Booking Type -->
+          <div>
+            <label for="{{ form.booking_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+              {{ form.booking_type.label }}
+            </label>
+            {{ form.booking_type }}
+            {% if form.booking_type.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.booking_type.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Start/End -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.start_datetime.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.start_datetime.label }}
+              </label>
+              {{ form.start_datetime }}
+              {% if form.start_datetime.errors %}
+                <div class="mt-1 text-sm text-red-600">{{ form.start_datetime.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div>
+              <label for="{{ form.end_datetime.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ form.end_datetime.label }}
+              </label>
+              {{ form.end_datetime }}
+              {% if form.end_datetime.errors %}
+                <div class="mt-1 text-sm text-red-600">{{ form.end_datetime.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Customer Name -->
+          <div>
+            <label for="{{ form.customer_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+              {{ form.customer_name.label }}
+            </label>
+            {{ form.customer_name }}
+            {% if form.customer_name.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.customer_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Customer Phone -->
+          <div>
+            <label for="{{ form.customer_phone.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+              {{ form.customer_phone.label }}
+            </label>
+            {{ form.customer_phone }}
+            {% if form.customer_phone.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.customer_phone.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Guest Names -->
+          <div>
+            <label for="{{ form.guest_names.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+              {{ form.guest_names.label }}
+            </label>
+            {{ form.guest_names }}
+            <p class="text-xs text-gray-500 mt-1">يمكنك إضافة أسماء الضيوف الآن أو لاحقاً. سيتم إنشاء رمز منفصل لكل اسم بعد إتمام الطلب.</p>
+            {% if form.guest_names.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.guest_names.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Price Note -->
+          <div class="bg-blue-50 p-4 rounded-lg text-blue-700 text-sm">
+            يتم احتساب المبلغ بناءً على نوع الحجز وزمنه وسيظهر في الخطوة التالية.
+          </div>
+
+          <!-- Submit Button -->
+          <div class="flex space-x-4 space-x-reverse">
+            <button type="submit" class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
+              متابعة إلى الدفع
+            </button>
+            <a href="/" class="flex-1 bg-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium text-center hover:bg-gray-400 transition duration-200">
+              إلغاء
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+input[type="datetime-local"],
+input[type="text"],
+input[type="tel"],
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+input[type="datetime-local"]:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+</style>
+{% endblock %}

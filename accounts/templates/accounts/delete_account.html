@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}حذف الحساب - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-lg shadow-xl p-8">
+            <div class="text-center mb-8">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+                    <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">حذف الحساب نهائياً</h2>
+                
+                <div class="text-gray-600 space-y-4 mb-8">
+                    <p class="font-medium">تحذير: هذا الإجراء لا يمكن التراجع عنه!</p>
+                    <p class="text-sm">سيتم حذف جميع بياناتك وحجوزاتك نهائياً من النظام.</p>
+                </div>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="font-medium text-red-800 mb-2">ما سيتم حذفه:</h3>
+                    <ul class="text-sm text-red-700 space-y-1">
+                        <li>• معلومات الحساب الشخصية</li>
+                        <li>• جميع الحجوزات السابقة والحالية</li>
+                        <li>• سجل المدفوعات</li>
+                        <li>• الصور والملفات المرفوعة</li>
+                    </ul>
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="{{ form.password.id_for_label }}">
+                        <span class="label-text font-medium text-red-700">{{ form.password.label }}</span>
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.password.errors.0 }}</span>
+                        </label>
+                    {% endif %}
+                    <label class="label">
+                        <span class="label-text-alt text-gray-500">أدخل كلمة المرور الحالية للتأكيد</span>
+                    </label>
+                </div>
+
+                <div class="form-control">
+                    <label class="label cursor-pointer justify-start">
+                        <input type="checkbox" name="confirm_deletion" class="checkbox checkbox-error ml-3" required />
+                        <span class="label-text text-sm">أؤكد رغبتي في حذف حسابي نهائياً وأتفهم أن هذا الإجراء لا يمكن التراجع عنه</span>
+                    </label>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button type="submit" class="btn btn-error flex-1" onclick="return confirm('هل أنت متأكد تماماً من رغبتك في حذف حسابك؟ لن تتمكن من استرداده مرة أخرى.')">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        حذف الحساب نهائياً
+                    </button>
+                    
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-outline flex-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        إلغاء والعودة
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

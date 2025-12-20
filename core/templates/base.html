@@ -1,0 +1,117 @@
+{% load static %}
+{% load tailwind_tags %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: https: http:; connect-src 'self' https: http:; font-src 'self' https: data:;">
+    <title>{% block title %}منصة حجز العقارات{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    {% tailwind_css %}
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS for RTL -->
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .rtl {
+            direction: rtl;
+            text-align: right;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 rtl">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'portfolio:home' %}" class="text-white text-xl font-bold">
+                        منصة حجز العقارات
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <a href="{% url 'portfolio:home' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md">
+                        الرئيسية
+                    </a>
+                    <a href="{% url 'portfolio:property_list' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md">
+                        الشاليهات/العقارات
+                    </a>
+                    <a href="{% url 'portfolio:about' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md">
+                        من نحن
+                    </a>
+                    <a href="{% url 'portfolio:contact' %}" class="text-white hover:text-blue-200 px-3 py-2 rounded-md">
+                        اتصل بنا
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} bg-{{ message.tags == 'error' and 'red' or message.tags == 'success' and 'green' or 'blue' }}-100 border border-{{ message.tags == 'error' and 'red' or message.tags == 'success' and 'green' or 'blue' }}-400 text-{{ message.tags == 'error' and 'red' or message.tags == 'success' and 'green' or 'blue' }}-700 px-4 py-3 rounded mb-4">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">منصة حجز العقارات</h3>
+                    <p class="text-gray-300">
+                        نوفر لكم أفضل القاعات للمناسبات والحفلات بأسعار مناسبة وخدمة متميزة.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">روابط سريعة</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'portfolio:home' %}" class="text-gray-300 hover:text-white">الرئيسية</a></li>
+                        <li><a href="{% url 'portfolio:property_list' %}" class="text-gray-300 hover:text-white">الشاليهات/العقارات</a></li>
+                        <li><a href="{% url 'portfolio:about' %}" class="text-gray-300 hover:text-white">من نحن</a></li>
+                        <li><a href="{% url 'portfolio:contact' %}" class="text-gray-300 hover:text-white">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">معلومات التواصل</h3>
+                    <div class="text-gray-300 space-y-2">
+                        <p>📞 +967 70 123 4567</p>
+                        <p>📧 info@munasabah.com</p>
+                        <p>📍 صنعاء، الجمهورية اليمنية</p>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+                <p class="text-gray-300">
+                    &copy; 2025 منصة حجز العقارات. جميع الحقوق محفوظة.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- JavaScript -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

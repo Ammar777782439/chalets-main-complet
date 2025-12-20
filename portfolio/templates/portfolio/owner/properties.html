@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}عقاراتي{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">عقاراتي</h1>
+      <div class="flex items-center gap-2">
+        <a href="{% url 'portfolio:owner_property_create' %}" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">إضافة عقار</a>
+        <a href="{% url 'portfolio:owner_dashboard' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">لوحة المالك</a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <div class="divide-y">
+        {% for p in properties %}
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                {% if p.main_image %}
+                  <img src="{{ p.main_image.url }}" class="w-full h-full object-cover" alt="{{ p.name }}" />
+                {% endif %}
+              </div>
+              <div>
+                <div class="font-semibold text-gray-900">{{ p.name }}</div>
+                <div class="text-sm text-gray-500">{{ p.city }} • {{ p.get_property_type_display }}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              {% if p.is_verified_by_platform %}
+                <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">موثق</span>
+              {% endif %}
+              {% if p.slug %}
+                <a href="{% url 'portfolio:owner_property_detail' slug=p.slug %}" class="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-sm">عرض</a>
+              {% else %}
+                <span class="px-3 py-1 rounded bg-gray-100 text-gray-400 text-sm cursor-not-allowed" title="لم يتم إنشاء رابط العرض بعد">عرض</span>
+              {% endif %}
+              <a href="{% url 'portfolio:owner_property_edit' slug=p.slug %}" class="px-3 py-1 rounded bg-white border text-gray-700 hover:bg-gray-50 text-sm">تحرير</a>
+              <a href="{% url 'portfolio:owner_property_delete' slug=p.slug %}" class="px-3 py-1 rounded bg-white border text-red-600 hover:bg-red-50 text-sm">حذف</a>
+              <a href="{% url 'portfolio:owner_property_gallery_add' slug=p.slug %}" class="px-3 py-1 rounded bg-white border text-gray-700 hover:bg-gray-50 text-sm">إضافة صورة</a>
+            </div>
+          </div>
+        {% empty %}
+          <div class="p-8 text-center text-gray-500">لا توجد عقارات بعد</div>
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+      <div class="p-4 border-t flex items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1 rounded bg-white border text-gray-700">السابق</a>
+        {% endif %}
+        <span class="px-3 py-1 rounded bg-blue-600 text-white">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1 rounded bg-white border text-gray-700">التالي</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

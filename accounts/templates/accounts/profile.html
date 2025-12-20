@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}الملف الشخصي - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header Card -->
+        <div class="bg-white rounded-lg shadow-xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-8">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        {% if user.userprofile.profile_picture %}
+                            <img class="h-20 w-20 rounded-full border-4 border-white" src="{{ user.userprofile.profile_picture.url }}" alt="صورة الملف الشخصي">
+                        {% else %}
+                            <div class="h-20 w-20 rounded-full border-4 border-white bg-gray-300 flex items-center justify-center">
+                                <svg class="h-12 w-12 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mr-6">
+                        <h1 class="text-2xl font-bold text-white">{{ user.userprofile.full_name|default:user.username }}</h1>
+                        <p class="text-blue-100">{{ user.email }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Bookings Card -->
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="px-6 py-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                        <svg class="w-6 h-6 ml-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        حجوزاتي
+                    </h2>
+                </div>
+                <div class="px-6 py-6">
+                    <!-- Bookings Section -->
+                    {% if bookings %}
+                        <div class="space-y-4 max-h-96 overflow-y-auto">
+                            {% for booking in bookings %}
+                                <div class="bg-gray-50 rounded-lg p-4 border hover:shadow-md transition-shadow">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900">{{ booking.property.name }}</h4>
+                                            {% if booking.start_datetime and booking.end_datetime %}
+                                                <p class="text-gray-600 text-sm">المدة: {{ booking.start_datetime|date:"Y/m/d H:i" }} → {{ booking.end_datetime|date:"Y/m/d H:i" }}</p>
+                                            {% else %}
+                                                <p class="text-gray-600 text-sm">تاريخ الحجز: {{ booking.booking_date }}</p>
+                                            {% endif %}
+                                            <p class="text-gray-600 text-sm">المبلغ: {{ booking.total_price }} ريال</p>
+                                        </div>
+                                        <div>
+                                            {% if booking.status == 'pending' %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">في انتظار التأكيد</span>
+                                            {% elif booking.status == 'confirmed' %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">مؤكد</span>
+                                            {% elif booking.status == 'cancelled' %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">ملغي</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if booking.payment %}
+                                        <div class="mt-3 pt-3 border-t border-gray-200">
+                                            <div class="flex justify-between items-center text-sm">
+                                                <span class="text-gray-600">
+                                                    طريقة الدفع: 
+                                                    {% if booking.payment.payment_method == 'bank_transfer' %}تحويل بنكي
+                                                    {% elif booking.payment.payment_method == 'wallet_transfer' %}تحويل محفظة
+                                                    {% elif booking.payment.payment_method == 'cash' %}نقداً في المكتب
+                                                    {% else %}—{% endif %}
+                                                </span>
+                                                <span class="text-gray-600">
+                                                    حالة الدفع: 
+                                                    {% if booking.payment.status == 'pending' %}
+                                                        <span class="text-yellow-600 font-medium">في انتظار المراجعة</span>
+                                                    {% elif booking.payment.status == 'approved' %}
+                                                        <span class="text-green-600 font-medium">مقبول</span>
+                                                    {% elif booking.payment.status == 'rejected' %}
+                                                        <span class="text-red-600 font-medium">مرفوض</span>
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <h3 class="mt-4 text-lg font-medium text-gray-900">لا توجد حجوزات</h3>
+                            <p class="mt-2 text-sm text-gray-500">لم تقم بأي حجوزات بعد.</p>
+                            <div class="mt-6">
+                                <a href="{% url 'portfolio:property_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    تصفح العقارات
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Personal Information Card -->
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div class="px-6 py-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                        <svg class="w-6 h-6 ml-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        المعلومات الشخصية
+                    </h2>
+                </div>
+                <div class="px-6 py-6">
+
+                    <form method="post" enctype="multipart/form-data" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ form.full_name.label }}
+                                </label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {{ form.full_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ form.email.label }}
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {{ form.email.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ form.phone_number.label }}
+                                </label>
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {{ form.phone_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.date_of_birth.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ form.date_of_birth.label }}
+                                </label>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {{ form.date_of_birth.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ form.address.label }}
+                                </label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {{ form.address.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <label for="{{ form.profile_picture.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ form.profile_picture.label }}
+                                </label>
+                                {{ form.profile_picture }}
+                                {% if form.profile_picture.errors %}
+                                    <div class="mt-1 text-sm text-red-600">
+                                        {{ form.profile_picture.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-3 pt-6 border-t border-gray-200">
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                حفظ التغييرات
+                            </button>
+                            
+                            <a href="{% url 'accounts:password_change' %}" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg text-center transition duration-200 flex items-center justify-center">
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                تغيير كلمة المرور
+                            </a>
+                            
+                            <a href="{% url 'accounts:delete_account' %}" onclick="return confirm('هل أنت متأكد من رغبتك في حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.')" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                حذف الحساب
+                            </a>
+                        </div>
+                    </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

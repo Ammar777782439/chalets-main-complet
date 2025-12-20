@@ -1,0 +1,298 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}مناسبه{% endblock %}</title>
+    <meta name="description" content="{% block description %}مناسبه - منصة حجز الشاليهات والاستراحات والحدائق - احجز مكانك المثالي{% endblock %}">
+    <!-- IBM Plex Sans Arabic Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+    {% tailwind_css %}
+    <!-- Leaflet CSS for OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <style>
+        body {
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+        }
+        /* Custom styles for Leaflet maps in RTL */
+        .leaflet-control-container .leaflet-routing-container-hide {
+            display: none;
+        }
+        .leaflet-popup-content {
+            direction: rtl;
+            text-align: right;
+        }
+        /* Ensure form inputs are readable in all themes */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="datetime-local"],
+        input[type="date"],
+        select,
+        textarea {
+            background-color: #ffffff !important; /* white */
+            color: #111827 !important; /* gray-900 text */
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: #6b7280 !important; /* gray-500 */
+            opacity: 1;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-gray-50 font-sans text-gray-900 antialiased" dir="rtl">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'portfolio:home' %}" class="flex-shrink-0 flex items-center">
+                        <h1 class="text-2xl font-bold text-blue-600">مناسبه</h1>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center space-x-reverse space-x-8">
+                    <a href="{% url 'portfolio:home' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الرئيسية</a>
+                    
+                    <a href="{% url 'portfolio:property_list' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الشاليهات/العقارات</a>
+                    <a href="{% url 'portfolio:about' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">من نحن</a>
+                    <a href="{% url 'portfolio:contact' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">اتصل بنا</a>
+                    
+                    {% if user.is_authenticated %}
+                        {% if user.is_superuser %}
+                            <a href="{% url 'admin:index' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة النظام</a>
+                        {% elif user.userprofile and user.userprofile.is_owner %}
+                            <a href="{% url 'portfolio:owner_dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة المالك</a>
+                        {% endif %}
+                        <div class="relative" id="user-menu">
+                            <button class="flex items-center text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors" id="user-menu-button">
+                                {% if user.userprofile and user.userprofile.profile_picture %}
+                                    <img src="{{ user.userprofile.profile_picture.url }}" alt="صورة الملف الشخصي" class="w-8 h-8 rounded-full object-cover border-2 border-gray-300">
+                                {% else %}
+                                    <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden" id="user-menu-dropdown">
+                                <a href="{% url 'accounts:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">الملف الشخصي</a>
+                                <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">تسجيل الخروج</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">تسجيل الدخول</a>
+                        <a href="{% url 'accounts:register' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">إنشاء حساب</a>
+                    {% endif %}
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button type="button" class="mobile-menu-button inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">فتح القائمة الرئيسية</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile menu -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
+                <a href="{% url 'portfolio:home' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">الرئيسية</a>
+                
+                <a href="{% url 'portfolio:property_list' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">الشاليهات/العقارات</a>
+                <a href="{% url 'portfolio:contact' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">اتصل بنا</a>
+                
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <a href="{% url 'admin:index' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">لوحة النظام</a>
+                    {% elif user.userprofile and user.userprofile.is_owner %}
+                        <a href="{% url 'portfolio:owner_dashboard' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">لوحة المالك</a>
+                    {% endif %}
+                    <div class="border-t border-gray-200 pt-2 mt-2">
+                        <div class="px-3 py-2 flex items-center">
+                            {% if user.userprofile and user.userprofile.profile_picture %}
+                                <img src="{{ user.userprofile.profile_picture.url }}" alt="صورة الملف الشخصي" class="w-8 h-8 rounded-full object-cover border-2 border-gray-300 ml-2">
+                            {% else %}
+                                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center ml-2">
+                                    <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            <p class="text-sm text-gray-500">مرحباً</p>
+                        </div>
+                        <a href="{% url 'accounts:profile' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">الملف الشخصي</a>
+                        <a href="{% url 'accounts:logout' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">تسجيل الخروج</a>
+                    </div>
+                {% else %}
+                    <div class="border-t border-gray-200 pt-2 mt-2">
+                        <a href="{% url 'accounts:login' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">تسجيل الدخول</a>
+                        <a href="{% url 'accounts:register' %}" class="bg-blue-600 hover:bg-blue-700 text-white block px-3 py-2 rounded-md text-base font-medium text-center">إنشاء حساب</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200 text-yellow-800{% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %} px-4 py-3 rounded-lg mb-2 flex items-center shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {% if message.tags == 'success' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% elif message.tags == 'error' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% elif message.tags == 'warning' %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        {% else %}
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        {% endif %}
+                    </svg>
+                    <span>{{ message }}</span>
+                    <button type="button" class="mr-auto text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">مناسبه</h3>
+                    <p class="text-gray-300">مناسبه - نوفر لك أفضل الشاليهات والاستراحات والحدائق لمناسباتك الخاصة مع خدمة متميزة وأسعار مناسبة.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">روابط سريعة</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'portfolio:home' %}" class="text-gray-300 hover:text-white transition-colors">الرئيسية</a></li>
+                        
+                        <li><a href="{% url 'portfolio:property_list' %}" class="text-gray-300 hover:text-white transition-colors">الشاليهات/العقارات</a></li>
+                        <li><a href="{% url 'portfolio:about' %}" class="text-gray-300 hover:text-white transition-colors">من نحن</a></li>
+                        <li><a href="{% url 'portfolio:contact' %}" class="text-gray-300 hover:text-white transition-colors">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">معلومات التواصل</h3>
+                    <div class="space-y-2 text-gray-300">
+                        <p>📞 +967 70 123 4567</p>
+                        <p>📧 info@munasabah.com</p>
+                        <p>📍 صنعاء، الجمهورية اليمنية</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-700 text-center">
+                <p class="text-gray-300">&copy; 2024 مناسبه. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.querySelector('.mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // User dropdown menu
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            const userMenu = document.getElementById('user-menu');
+            
+            if (userMenuButton && userMenuDropdown && userMenu) {
+                let isDropdownOpen = false;
+                let hoverTimeout;
+                
+                // Show dropdown on button click
+                userMenuButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    isDropdownOpen = !isDropdownOpen;
+                    userMenuDropdown.classList.toggle('hidden', !isDropdownOpen);
+                });
+                
+                // Show dropdown on hover with delay
+                userMenu.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                    if (!isDropdownOpen) {
+                        hoverTimeout = setTimeout(() => {
+                            isDropdownOpen = true;
+                            userMenuDropdown.classList.remove('hidden');
+                        }, 200);
+                    }
+                });
+                
+                // Hide dropdown on mouse leave with delay
+                userMenu.addEventListener('mouseleave', function() {
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = setTimeout(() => {
+                        isDropdownOpen = false;
+                        userMenuDropdown.classList.add('hidden');
+                    }, 300);
+                });
+                
+                // Keep dropdown open when hovering over it
+                userMenuDropdown.addEventListener('mouseenter', function() {
+                    clearTimeout(hoverTimeout);
+                });
+                
+                userMenuDropdown.addEventListener('mouseleave', function() {
+                    hoverTimeout = setTimeout(() => {
+                        isDropdownOpen = false;
+                        userMenuDropdown.classList.add('hidden');
+                    }, 300);
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userMenu.contains(e.target)) {
+                        isDropdownOpen = false;
+                        userMenuDropdown.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- Leaflet JavaScript for OpenStreetMap -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}مزاياي{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-10">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">مزاياي</h1>
+      <div class="flex gap-2">
+        <a href="{% url 'portfolio:owner_amenity_create' %}" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">إضافة ميزة</a>
+        <a href="{% url 'portfolio:owner_dashboard' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">لوحة المالك</a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow">
+      {% if amenities %}
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">الاسم</th>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">الأيقونة (CSS)</th>
+              <th class="px-4 py-2 text-right text-sm font-semibold text-gray-700">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for a in amenities %}
+            <tr>
+              <td class="px-4 py-2 text-gray-900">{{ a.name }}</td>
+              <td class="px-4 py-2 text-gray-700">
+                {% if a.icon_class %}<i class="{{ a.icon_class }} mr-1"></i>{% endif %}
+                <span class="text-sm">{{ a.icon_class|default:"—" }}</span>
+              </td>
+              <td class="px-4 py-2">
+                <div class="flex gap-2">
+                  <a href="{% url 'portfolio:owner_amenity_edit' a.pk %}" class="px-3 py-1 rounded bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm">تعديل</a>
+                  <a href="{% url 'portfolio:owner_amenity_delete' a.pk %}" class="px-3 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-sm">حذف</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="text-center py-12 text-gray-500">
+          لا توجد مزايا بعد. ابدأ بإضافة ميزة.
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
