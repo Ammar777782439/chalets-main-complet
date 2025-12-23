@@ -3,8 +3,8 @@ import os
 
 # Production settings
 DEBUG = False
-SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
-ALLOWED_HOSTS = ['your-app-name.herokuapp.com', 'localhost']
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-urrr(=4&rsw=3s!%6qn$+fu5m%w^)elz_os^mq6d*8_g2ynkl#')
+ALLOWED_HOSTS = ['*']
 
 # Database for production (PostgreSQL on Heroku)
 try:
