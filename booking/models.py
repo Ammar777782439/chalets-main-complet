@@ -163,6 +163,8 @@ class BookingGuest(models.Model):
     serial = models.PositiveIntegerField(verbose_name="الرقم التسلسلي")
     name = models.CharField(max_length=200, verbose_name="اسم الضيف")
     code = models.CharField(max_length=20, verbose_name="رمز الدعوة")
+    checkin_time = models.DateTimeField(null=True, blank=True, verbose_name="وقت الدخول")
+    checkout_time = models.DateTimeField(null=True, blank=True, verbose_name="وقت الخروج")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_scan
 
 app_name = 'booking'
 
@@ -11,5 +12,7 @@ urlpatterns = [
     path('success/<int:booking_id>/', views.BookingSuccessView.as_view(), name='booking_success'),
     path('<int:booking_id>/guests/', views.BookingGuestsView.as_view(), name='guest_list'),
     path('<int:booking_id>/guests.csv', views.booking_guests_csv, name='guest_list_csv'),
-
+    
+    # QR Scanner
+    path('scanner/', views_scan.QRScannerView.as_view(), name='qr_scanner'),
 ]

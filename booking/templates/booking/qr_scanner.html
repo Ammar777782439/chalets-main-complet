@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ماسح QR Code{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">ماسح QR Code</h1>
+      <p class="text-gray-600">امسح رمز QR للتحقق من ضيوف الحجز</p>
+    </div>
+
+    <!-- Scanner Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="text-center">
+        <div id="scanner-container" class="relative mx-auto" style="max-width: 500px;">
+          <video id="video" class="w-full rounded-lg" style="display: none;"></video>
+          <canvas id="canvas" class="w-full rounded-lg" style="display: none;"></canvas>
+          
+          <!-- Start Scanner Button -->
+          <div id="start-scanner" class="text-center py-12">
+            <div class="mb-4">
+              <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+              </svg>
+            </div>
+            <button onclick="startScanner()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+              بدء المسح
+            </button>
+            <p class="text-gray-500 mt-4 text-sm">اضغط للبدء ثم وجه الكاميرا إلى رمز QR</p>
+          </div>
+
+          <!-- Scanner Active -->
+          <div id="scanner-active" class="hidden">
+            <div class="relative">
+              <video id="scanner-video" class="w-full rounded-lg"></video>
+              <div class="absolute inset-0 border-4 border-green-500 rounded-lg pointer-events-none"></div>
+            </div>
+            <div class="mt-4 space-x-2 space-x-reverse">
+              <button onclick="stopScanner()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                إيقاف المسح
+              </button>
+              <button onclick="switchCamera()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                تبديل الكاميرا
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual Input -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <h3 class="text-lg font-semibold mb-4">إدخال يدوي للرمز</h3>
+      <div class="flex space-x-2 space-x-reverse">
+        <input type="text" id="manual-code" placeholder="أدخل رمز الضيف (مثال: ABC123)" 
+               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <button onclick="verifyManualCode()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          تحقق
+        </button>
+      </div>
+    </div>
+
+    <!-- Guest Info -->
+    <div id="guest-info" class="hidden bg-white rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">معلومات الضيف</h3>
+      <div id="guest-details"></div>
+      <div class="mt-4 space-x-2 space-x-reverse">
+        <button id="checkin-btn" onclick="checkInGuest()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          تسجيل الدخول
+        </button>
+        <button id="checkout-btn" onclick="checkOutGuest()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+          تسجيل الخروج
+        </button>
+        <button onclick="clearGuestInfo()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+          مسح
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Scans -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-semibold mb-4">آخر المسحات</h3>
+      <div id="recent-scans" class="space-y-2">
+        <p class="text-gray-500 text-sm">لا توجد مسحات حديثة</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include QR Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+let html5QrCode = null;
+let currentStream = null;
+let currentCamera = 'environment';
+let currentGuestCode = null;
+
+function startScanner() {
+  document.getElementById('start-scanner').classList.add('hidden');
+  document.getElementById('scanner-active').classList.remove('hidden');
+  
+  html5QrCode = new Html5Qrcode("scanner-video");
+  
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+      const cameraId = devices.find(d => d.label.toLowerCase().includes('back'))?.id || devices[0].id;
+      
+      html5QrCode.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        (decodedText, decodedResult) => {
+          onScanSuccess(decodedText);
+        },
+        (errorMessage) => {
+          // Handle scan error silently
+        }
+      ).catch((err) => {
+        console.error(`Unable to start scanning: ${err}`);
+        alert('فشل بدء المسح. يرجى التحقق من إذن الكاميرا.');
+        stopScanner();
+      });
+    }
+  }).catch(err => {
+    console.error(`Camera enumeration failed: ${err}`);
+    alert('فشل الوصول للكاميرا.');
+    stopScanner();
+  });
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+    }).catch((err) => {
+      console.error(`Failed to stop scanning: ${err}`);
+    });
+    html5QrCode = null;
+  }
+  
+  document.getElementById('start-scanner').classList.remove('hidden');
+  document.getElementById('scanner-active').classList.add('hidden');
+}
+
+function switchCamera() {
+  stopScanner();
+  // Toggle between front and back camera
+  currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+  setTimeout(startScanner, 100);
+}
+
+function onScanSuccess(decodedText) {
+  try {
+    const data = JSON.parse(decodedText);
+    if (data.code) {
+      verifyCode(data.code);
+    }
+  } catch (e) {
+    // If it's not JSON, try to use it directly as a code
+    verifyCode(decodedText);
+  }
+}
+
+function verifyManualCode() {
+  const code = document.getElementById('manual-code').value.trim();
+  if (code) {
+    verifyCode(code);
+  }
+}
+
+function verifyCode(code) {
+  fetch(`/api/verify-guest/${code}/`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      
+      currentGuestCode = code;
+      displayGuestInfo(data.guest);
+      addToRecentScans(data.guest);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('حدث خطأ في التحقق من الرمز');
+    });
+}
+
+function displayGuestInfo(guest) {
+  const infoDiv = document.getElementById('guest-info');
+  const detailsDiv = document.getElementById('guest-details');
+  
+  const checkinBtn = document.getElementById('checkin-btn');
+  const checkoutBtn = document.getElementById('checkout-btn');
+  
+  // Update buttons based on status
+  if (guest.checkin_time) {
+    checkinBtn.disabled = true;
+    checkinBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  } else {
+    checkinBtn.disabled = false;
+    checkinBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+  
+  if (guest.checkout_time) {
+    checkoutBtn.disabled = true;
+    checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  } else if (!guest.checkin_time) {
+    checkoutBtn.disabled = true;
+    checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+  } else {
+    checkoutBtn.disabled = false;
+    checkoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+  
+  detailsDiv.innerHTML = `
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div><strong>الاسم:</strong> ${guest.name}</div>
+      <div><strong>الرمز:</strong> ${guest.code}</div>
+      <div><strong>الرقم التسلسلي:</strong> ${guest.serial}</div>
+      <div><strong>حالة الحجز:</strong> ${guest.booking_status}</div>
+      <div><strong>الشاليه:</strong> ${guest.property_name}</div>
+      <div><strong>رقم الحجز:</strong> #${guest.booking_id}</div>
+      ${guest.checkin_time ? `<div><strong>وقت الدخول:</strong> ${new Date(guest.checkin_time).toLocaleString('ar-SA')}</div>` : ''}
+      ${guest.checkout_time ? `<div><strong>وقت الخروج:</strong> ${new Date(guest.checkout_time).toLocaleString('ar-SA')}</div>` : ''}
+    </div>
+  `;
+  
+  infoDiv.classList.remove('hidden');
+}
+
+function checkInGuest() {
+  if (!currentGuestCode) return;
+  
+  fetch('/api/verify-guest-action/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+      code: currentGuestCode,
+      action: 'checkin'
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      verifyCode(currentGuestCode); // Refresh guest info
+    } else {
+      alert(data.error);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('حدث خطأ في تسجيل الدخول');
+  });
+}
+
+function checkOutGuest() {
+  if (!currentGuestCode) return;
+  
+  fetch('/api/verify-guest-action/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify({
+      code: currentGuestCode,
+      action: 'checkout'
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      verifyCode(currentGuestCode); // Refresh guest info
+    } else {
+      alert(data.error);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('حدث خطأ في تسجيل الخروج');
+  });
+}
+
+function clearGuestInfo() {
+  document.getElementById('guest-info').classList.add('hidden');
+  currentGuestCode = null;
+  document.getElementById('manual-code').value = '';
+}
+
+function addToRecentScans(guest) {
+  const recentDiv = document.getElementById('recent-scans');
+  const time = new Date().toLocaleString('ar-SA');
+  
+  const scanItem = document.createElement('div');
+  scanItem.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
+  scanItem.innerHTML = `
+    <div>
+      <span class="font-medium">${guest.name}</span>
+      <span class="text-gray-500 text-sm mr-2">${guest.code}</span>
+    </div>
+    <span class="text-gray-400 text-xs">${time}</span>
+  `;
+  
+  // Keep only last 5 scans
+  if (recentDiv.children.length >= 5) {
+    recentDiv.removeChild(recentDiv.lastChild);
+  }
+  
+  recentDiv.insertBefore(scanItem, recentDiv.firstChild);
+  
+  // Remove placeholder text
+  if (recentDiv.querySelector('.text-gray-500')) {
+    recentDiv.querySelector('.text-gray-500').remove();
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+
+<style>
+#scanner-video {
+  transform: scaleX(-1);
+}
+</style>
+{% endblock %}

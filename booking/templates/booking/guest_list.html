@@ -45,7 +45,12 @@
                 <td class="px-4 py-2 text-gray-900 font-mono">{{ g.serial }}</td>
                 <td class="px-4 py-2 text-gray-900">{{ g.name }}</td>
                 <td class="px-4 py-2">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 font-mono">{{ g.code }}</span>
+                  <div class="flex items-center space-x-2 space-x-reverse">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 font-mono">{{ g.code }}</span>
+                    <button onclick="showQRCode('{{ g.code }}', '{{ g.name }}', '{{ g.serial }}')" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      عرض QR
+                    </button>
+                  </div>
                 </td>
               </tr>
             {% endfor %}
@@ -65,6 +70,60 @@
     </div>
   </div>
 </div>
+
+<!-- QR Code Modal -->
+<div id="qrModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50" onclick="closeQRModal(event)">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white" onclick="event.stopPropagation()">
+    <div class="mt-3 text-center">
+      <h3 class="text-lg font-medium text-gray-900 mb-2">رمز QR للضيف</h3>
+      <div id="qrContent" class="my-4">
+        <!-- QR code will be inserted here -->
+      </div>
+      <div class="text-sm text-gray-600 mt-2">
+        <p id="guestInfo"></p>
+      </div>
+      <div class="mt-4">
+        <button onclick="closeQRModal()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showQRCode(code, name, serial) {
+  const modal = document.getElementById('qrModal');
+  const content = document.getElementById('qrContent');
+  const info = document.getElementById('guestInfo');
+  
+  // Show loading
+  content.innerHTML = '<div class="text-center py-8">جاري التحميل...</div>';
+  info.textContent = `الضيف: ${name} (${serial}) - الرمز: ${code}`;
+  
+  // Fetch QR code
+  fetch(`/api/guest-qr/${code}/`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.qr_code) {
+        content.innerHTML = `<img src="${data.qr_code}" alt="QR Code" class="mx-auto">`;
+      } else {
+        content.innerHTML = '<div class="text-red-600">فشل إنشاء رمز QR</div>';
+      }
+    })
+    .catch(error => {
+      content.innerHTML = '<div class="text-red-600">خطأ في تحميل رمز QR</div>';
+    });
+  
+  modal.classList.remove('hidden');
+}
+
+function closeQRModal(event) {
+  if (!event || event.target.id === 'qrModal') {
+    document.getElementById('qrModal').classList.add('hidden');
+  }
+}
+</script>
 
 <style>
 @media print {

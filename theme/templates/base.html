@@ -72,6 +72,7 @@
                             <a href="{% url 'admin:index' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة النظام</a>
                         {% elif user.userprofile and user.userprofile.is_owner %}
                             <a href="{% url 'portfolio:owner_dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة المالك</a>
+                            <a href="{% url 'booking:qr_scanner' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">ماسح QR</a>
                         {% endif %}
                         <div class="relative" id="user-menu">
                             <button class="flex items-center text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors" id="user-menu-button">
@@ -122,6 +123,7 @@
                         <a href="{% url 'admin:index' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">لوحة النظام</a>
                     {% elif user.userprofile and user.userprofile.is_owner %}
                         <a href="{% url 'portfolio:owner_dashboard' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">لوحة المالك</a>
+                        <a href="{% url 'booking:qr_scanner' %}" class="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium">ماسح QR</a>
                     {% endif %}
                     <div class="border-t border-gray-200 pt-2 mt-2">
                         <div class="px-3 py-2 flex items-center">

@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import *
+from booking import views_scan
 
 router = DefaultRouter()
 router.register(r'properties', PropertyViewSet)
@@ -34,6 +35,11 @@ urlpatterns = [
     path('payments/providers/', PaymentProviderListView.as_view(), name='payment_providers'),
     path('payments/submit/', PaymentSubmitView.as_view(), name='payment_submit'),
     path('payments/status/', PaymentStatusView.as_view(), name='payment_status'),
+
+    # QR Codes
+    path('guest-qr/<str:code>/', GuestQRCodeView.as_view(), name='guest_qr_code'),
+    path('verify-guest/<str:code>/', views_scan.get_guest_info, name='verify_guest_code'),
+    path('verify-guest-action/', views_scan.verify_guest_code, name='verify_guest_action'),
 
     # Router
     path('', include(router.urls)),

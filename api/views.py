@@ -12,8 +12,9 @@ from django.utils import timezone
 
 from accounts.models import UserProfile
 from portfolio.models import Property, Amenity, PropertyReview
-from booking.models import Booking, Payment, PaymentProvider
+from booking.models import Booking, Payment, PaymentProvider, BookingGuest
 from booking.services import is_timeslot_available
+from booking.utils import generate_qr_code_for_guest
 
 from .serializers import *
 from .permissions import *
@@ -234,3 +235,29 @@ class PaymentStatusView(views.APIView):
             return Response(PaymentSerializer(payment).data)
         except Payment.DoesNotExist:
             return Response({"error": "No payment found"}, status=404)
+
+# QR Code
+class GuestQRCodeView(views.APIView):
+    """Generate QR code for a guest"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, code):
+        try:
+            guest = BookingGuest.objects.select_related('booking', 'booking__property').get(code=code)
+            
+            # Verify user has permission (booking owner or property owner)
+            if guest.booking.user != request.user and guest.booking.property.owner != request.user:
+                return Response({"error": "غير مصرح بالوصول"}, status=403)
+            
+            qr_code = generate_qr_code_for_guest(guest, request)
+            
+            return Response({
+                'qr_code': qr_code,
+                'guest_name': guest.name,
+                'code': guest.code,
+                'booking_id': guest.booking.id,
+                'property_name': guest.booking.property.name if guest.booking.property else None
+            })
+            
+        except BookingGuest.DoesNotExist:
+            return Response({"error": "الرمز غير موجود"}, status=404)
