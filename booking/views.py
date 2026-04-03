@@ -55,6 +55,11 @@ class CreatePropertyBookingView(LoginRequiredMixin, TemplateView):
             if dt:
                 initial_data['end_datetime'] = dt
         context['form'] = PropertyBookingForm(property=context['property'], initial=initial_data)
+        # Add other properties from the same owner
+        current_property = context['property']
+        context['owner_properties'] = Property.objects.filter(
+            owner=current_property.owner
+        ).exclude(pk=current_property.pk).distinct()[:4]
         return context
 
     def post(self, request, *args, **kwargs):

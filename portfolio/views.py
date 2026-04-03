@@ -218,7 +218,7 @@ class OwnerBookingDetailView(OwnerRequiredMixin, DetailView):
     context_object_name = 'booking'
 
     def get_queryset(self):
-        return Booking.objects.select_related('property').filter(property__owner=self.request.user)
+        return Booking.objects.select_related('property').prefetch_related('guests').filter(property__owner=self.request.user)
 
 
 class OwnerPropertyDetailView(OwnerRequiredMixin, DetailView):
@@ -364,107 +364,42 @@ class PropertyListView(ListView):
         if form.is_valid():
             cd = form.cleaned_data
 
+            # Search by name/description
             search = cd.get('search')
             if search:
                 queryset = queryset.filter(Q(name__icontains=search) | Q(description__icontains=search))
 
+            # City filter
             city = cd.get('city')
             if city:
                 queryset = queryset.filter(city=city)
 
-            if cd.get('is_verified_by_platform'):
-                queryset = queryset.filter(is_verified_by_platform=True)
+            # Guests capacity (number of people)
+            guests = cd.get('guests')
+            if guests:
+                queryset = queryset.filter(capacity__gte=guests)
 
-            min_privacy = cd.get('min_privacy')
-            if min_privacy:
-                queryset = queryset.filter(privacy_rating__gte=min_privacy)
-
-            min_capacity = cd.get('min_capacity')
-            if min_capacity:
-                queryset = queryset.filter(capacity__gte=min_capacity)
-
-            max_capacity = cd.get('max_capacity')
-            if max_capacity:
-                queryset = queryset.filter(capacity__lte=max_capacity)
-
-            # Price filters based on booking type
-            booking_type = cd.get('booking_type')
-            price_field = 'price_per_day'
-            if booking_type == 'hourly':
-                price_field = 'price_per_hour'
-            elif booking_type == 'half_day':
-                price_field = 'price_half_day'
-            elif booking_type in ('full_day', 'overnight'):
-                price_field = 'price_per_day'
-
-            min_price = cd.get('min_price')
-            if min_price is not None and min_price != '':
-                queryset = queryset.filter(**{f'{price_field}__gte': min_price})
-
-            max_price = cd.get('max_price')
-            if max_price is not None and max_price != '':
-                queryset = queryset.filter(**{f'{price_field}__lte': max_price})
-
-            # Amenities: require all selected
-            amenities = cd.get('amenities')
-            if amenities:
-                queryset = queryset.filter(amenities__in=amenities)
-                queryset = queryset.annotate(match_count=Count('amenities', filter=Q(amenities__in=amenities), distinct=True))
-                queryset = queryset.filter(match_count=amenities.count())
-
-            # Timeslot availability filter
-            start = cd.get('start_datetime')
-            end = cd.get('end_datetime')
-            if start and end:
+            # Date availability filter
+            booking_date = cd.get('booking_date')
+            if booking_date:
+                from datetime import datetime, time
+                start = timezone.make_aware(datetime.combine(booking_date, time(8, 0)))
+                end = timezone.make_aware(datetime.combine(booking_date, time(20, 0)))
                 overlap = Booking.objects.filter(property=OuterRef('pk'), status__in=['pending', 'confirmed']).filter(
                     start_datetime__lt=end, end_datetime__gt=start
                 )
                 queryset = queryset.annotate(has_overlap=Exists(overlap)).filter(has_overlap=False)
 
-            # Radius filter around city center (approx bounding box)
-            radius_km = cd.get('radius_km')
-            if city and radius_km:
-                centers = {
-                    "Sana'a": (15.3694, 44.1910),
-                    "Ibb": (13.9667, 44.1833),
-                    "Aden": (12.7794, 45.0367),
-                    "Taiz": (13.5795, 44.0209),
-                    "Hodeidah": (14.7979, 42.9545),
-                }
-                if city in centers:
-                    lat0, lon0 = centers[city]
-                    deg_lat = float(radius_km) / 111.0
-                    # Avoid division by zero at poles
-                    cos_lat = max(0.000001, math.cos(math.radians(lat0)))
-                    deg_lon = float(radius_km) / (111.0 * cos_lat)
-                    queryset = queryset.exclude(latitude__isnull=True, longitude__isnull=True)
-                    queryset = queryset.filter(
-                        latitude__gte=lat0 - deg_lat,
-                        latitude__lte=lat0 + deg_lat,
-                        longitude__gte=lon0 - deg_lon,
-                        longitude__lte=lon0 + deg_lon,
-                    )
+            # Verified only filter
+            verified_only = cd.get('verified_only')
+            if verified_only:
+                queryset = queryset.filter(is_verified_by_platform=True)
 
-            # Ordering
-            ordering = cd.get('ordering')
-            # Annotate ratings (approved only)
+            # Default ordering by newest
             queryset = queryset.annotate(
                 avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
                 reviews_count=Count('reviews', filter=Q(reviews__is_approved=True))
-            )
-            if ordering:
-                if ordering in ('price', '-price'):
-                    field = price_field
-                    if ordering.startswith('-'):
-                        field = '-' + field
-                elif ordering in ('rating', '-rating'):
-                    # 'rating' = highest first, map to '-avg_rating'
-                    field = '-avg_rating' if ordering == 'rating' else 'avg_rating'
-                else:
-                    field = ordering
-                queryset = queryset.order_by(field)
-            else:
-                queryset = queryset.order_by('-created_at')
+            ).order_by('-created_at')
         else:
             queryset = queryset.annotate(
                 avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),

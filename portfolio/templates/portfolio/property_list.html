@@ -35,93 +35,56 @@
     </div>
 
     <!-- Filters -->
-    <form method="get" class="bg-white rounded-xl shadow p-6 mb-8 space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <form method="get" class="bg-white rounded-xl shadow p-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <!-- البحث -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.search.label }}</label>
           {{ search_form.search }}
         </div>
+        <!-- المدينة -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.city.label }}</label>
           {{ search_form.city }}
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.radius_km.label }}</label>
-          {{ search_form.radius_km }}
-        </div>
+        <!-- نوع الحجز -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.booking_type.label }}</label>
           {{ search_form.booking_type }}
         </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.start_datetime.label }}</label>
-            {{ search_form.start_datetime }}
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.end_datetime.label }}</label>
-            {{ search_form.end_datetime }}
-          </div>
-          <div class="md:col-span-2">
-            <div class="flex items-center gap-2 text-sm">
-              <span class="text-gray-500">اختصارات:</span>
-              <button type="button" id="preset-halfday" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">نصف يوم (13:00 - 18:00)</button>
-              <button type="button" id="preset-overnight" class="px-3 py-1 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">مبيت (16:00 - 10:00 +1)</button>
-            </div>
-          </div>
-        </div>
+        <!-- التاريخ -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.amenities.label }}</label>
-          {{ search_form.amenities }}
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.booking_date.label }}</label>
+          {{ search_form.booking_date }}
+        </div>
+        <!-- عدد الضيوف -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.guests.label }}</label>
+          {{ search_form.guests }}
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.min_price.label }}</label>
-            {{ search_form.min_price }}
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.max_price.label }}</label>
-            {{ search_form.max_price }}
-          </div>
+      <div class="flex items-center justify-between mt-6">
+        <!-- زر تبديل المعتمد/الكل -->
+        <div>
+          <a href="?{% for key, value in request.GET.items %}{% if key != 'verified_only' %}{{ key }}={{ value }}&{% endif %}{% endfor %}verified_only={% if request.GET.verified_only == 'on' %}false{% else %}on{% endif %}" 
+             class="inline-flex items-center px-4 py-2 rounded-lg font-medium transition {% if request.GET.verified_only == 'on' %}bg-green-600 text-white hover:bg-green-700{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+            {% if request.GET.verified_only == 'on' %}
+              <svg class="w-5 h-5 ml-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              عرض المعتمد فقط ✓
+            {% else %}
+              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              عرض المعتمد فقط
+            {% endif %}
+          </a>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.min_capacity.label }}</label>
-            {{ search_form.min_capacity }}
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.max_capacity.label }}</label>
-            {{ search_form.max_capacity }}
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.min_privacy.label }}</label>
-            {{ search_form.min_privacy }}
-          </div>
-          <div class="flex items-center mt-6">
-            <label class="text-sm font-medium text-gray-700 mr-2">{{ search_form.is_verified_by_platform.label }}</label>
-            {{ search_form.is_verified_by_platform }}
-          </div>
-        </div>
-      </div>
 
-      <div class="flex items-center justify-between">
-        <div class="w-64">
-          <label class="block text-sm font-medium text-gray-700 mb-1">{{ search_form.ordering.label }}</label>
-          {{ search_form.ordering }}
-        </div>
         <div class="flex gap-3">
           <a href="?" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">إعادة تعيين</a>
           <button type="submit" class="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">تطبيق الفلاتر</button>
         </div>
       </div>
+      {{ search_form.verified_only }}
     </form>
 
     <!-- Results (List) -->
@@ -165,11 +128,7 @@
               {% endif %}
             {% endwith %}
           </div>
-          <div class="grid grid-cols-3 gap-2 text-center text-sm">
-            <div class="bg-gray-50 rounded p-2">
-              <div class="text-gray-500">بالساعة</div>
-              <div class="font-bold text-blue-600">{{ p.price_per_hour|default:"-" }}</div>
-            </div>
+          <div class="grid grid-cols-2 gap-2 text-center text-sm">
             <div class="bg-gray-50 rounded p-2">
               <div class="text-gray-500">نصف يوم</div>
               <div class="font-bold text-blue-600">{{ p.price_half_day|default:"-" }}</div>
@@ -195,7 +154,7 @@
           </div>
           <div class="flex gap-3 mt-3">
             <a href="{% url 'portfolio:property_detail' slug=p.slug %}" class="flex-1 text-center px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">التفاصيل</a>
-            <a href="{% url 'booking:create_property_booking' property_id=p.id %}{% if request.GET.booking_type or request.GET.start_datetime or request.GET.end_datetime %}?{% endif %}{% if request.GET.booking_type %}booking_type={{ request.GET.booking_type }}{% endif %}{% if request.GET.start_datetime %}{% if request.GET.booking_type %}&{% endif %}start={{ request.GET.start_datetime }}{% endif %}{% if request.GET.end_datetime %}{% if request.GET.booking_type or request.GET.start_datetime %}&{% endif %}end={{ request.GET.end_datetime }}{% endif %}"
+            <a href="{% url 'booking:create_property_booking' property_id=p.id %}{% if request.GET.booking_type %}?booking_type={{ request.GET.booking_type }}{% endif %}"
                class="flex-1 text-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">احجز الآن</a>
           </div>
         </div>

@@ -153,21 +153,49 @@ class PropertyBookingForm(forms.ModelForm):
         })
     )
 
+    # نصف يوم - فترة الصباح أو المساء
+    half_day_period = forms.ChoiceField(
+        required=False,
+        label='فترة النصف يوم',
+        choices=[
+            ('morning', 'صباح (8 ص - 2 م)'),
+            ('evening', 'مساء (2 م - 8 م)'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200',
+        })
+    )
+
+    # تاريخ الحجز (للحجز باليوم أو نصف يوم)
+    booking_date = forms.DateField(
+        required=False,
+        label='تاريخ الحجز',
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200',
+            'min': timezone.now().strftime('%Y-%m-%d'),
+            'max': (timezone.now() + timezone.timedelta(days=90)).strftime('%Y-%m-%d')
+        })
+    )
+
     class Meta:
         model = Booking
         fields = ['booking_type', 'start_datetime', 'end_datetime', 'customer_name', 'customer_phone']
         widgets = {
             'booking_type': forms.Select(attrs={
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200',
+                'id': 'booking-type-select'
             }),
             'start_datetime': forms.DateTimeInput(attrs={
                 'type': 'datetime-local',
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200',
-                'min': timezone.now().strftime('%Y-%m-%dT%H:%M')
+                'min': timezone.now().strftime('%Y-%m-%dT%H:%M'),
+                'id': 'start-datetime'
             }),
             'end_datetime': forms.DateTimeInput(attrs={
                 'type': 'datetime-local',
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200',
+                'id': 'end-datetime'
             }),
             'customer_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 placeholder-gray-400',
@@ -233,8 +261,51 @@ class PropertyBookingForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        booking_type = cleaned.get('booking_type')
+        booking_date = cleaned.get('booking_date')
+        half_day_period = cleaned.get('half_day_period')
         start = cleaned.get('start_datetime')
         end = cleaned.get('end_datetime')
+
+        # Calculate start/end datetime based on booking type
+        if booking_type == 'half_day':
+            # For half day: need date and period
+            if not booking_date:
+                raise ValidationError('يرجى تحديد تاريخ الحجز لنصف يوم')
+            if not half_day_period:
+                raise ValidationError('يرجى اختيار فترة النصف يوم (صباح أو مساء)')
+                
+            # Calculate start/end based on period
+            from datetime import datetime, time
+            if half_day_period == 'morning':
+                start = timezone.make_aware(datetime.combine(booking_date, time(8, 0)))
+                end = timezone.make_aware(datetime.combine(booking_date, time(14, 0)))
+            else:  # evening
+                start = timezone.make_aware(datetime.combine(booking_date, time(14, 0)))
+                end = timezone.make_aware(datetime.combine(booking_date, time(20, 0)))
+            cleaned['start_datetime'] = start
+            cleaned['end_datetime'] = end
+            
+        elif booking_type in ['full_day', 'overnight']:
+            # For full day: need date only
+            if not booking_date:
+                raise ValidationError('يرجى تحديد تاريخ الحجز')
+                
+            from datetime import datetime, time
+            if self.property and self.property.checkin_time:
+                start_time = self.property.checkin_time
+            else:
+                start_time = time(8, 0)
+                
+            if self.property and self.property.checkout_time:
+                end_time = self.property.checkout_time
+            else:
+                end_time = time(20, 0)
+                
+            start = timezone.make_aware(datetime.combine(booking_date, start_time))
+            end = timezone.make_aware(datetime.combine(booking_date, end_time))
+            cleaned['start_datetime'] = start
+            cleaned['end_datetime'] = end
 
         # parse from input type datetime-local may be naive; make aware
         if start and timezone.is_naive(start):
@@ -272,9 +343,6 @@ class PropertyBookingForm(forms.ModelForm):
         end = self.cleaned_data.get('end_datetime')
         if not booking_type:
             return None
-        if booking_type == 'hourly' and start and end and self.property.price_per_hour:
-            hours = (end - start).total_seconds() / 3600.0
-            return math.ceil(hours) * self.property.price_per_hour
         if booking_type == 'half_day' and self.property.price_half_day:
             return self.property.price_half_day
         # full_day and overnight fallback to per_day

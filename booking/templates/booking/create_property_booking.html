@@ -36,11 +36,7 @@
               <span class="text-gray-600">السعة:</span>
               <span class="font-semibold">{{ property.capacity }} شخص</span>
             </div>
-            <div class="grid grid-cols-3 gap-2 text-sm">
-              <div class="bg-gray-50 rounded p-2 text-center">
-                <div class="text-gray-500">بالساعة</div>
-                <div class="font-bold text-blue-600">{{ property.price_per_hour|default:"-" }}</div>
-              </div>
+            <div class="grid grid-cols-2 gap-2 text-sm">
               <div class="bg-gray-50 rounded p-2 text-center">
                 <div class="text-gray-500">نصف يوم</div>
                 <div class="font-bold text-blue-600">{{ property.price_half_day|default:"-" }}</div>
@@ -88,27 +84,29 @@
             {% endif %}
           </div>
 
-          <!-- Start/End -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label for="{{ form.start_datetime.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                {{ form.start_datetime.label }}
-              </label>
-              {{ form.start_datetime }}
-              {% if form.start_datetime.errors %}
-                <div class="mt-1 text-sm text-red-600">{{ form.start_datetime.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div>
-              <label for="{{ form.end_datetime.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                {{ form.end_datetime.label }}
-              </label>
-              {{ form.end_datetime }}
-              {% if form.end_datetime.errors %}
-                <div class="mt-1 text-sm text-red-600">{{ form.end_datetime.errors.0 }}</div>
-              {% endif %}
-            </div>
+          <!-- Date Selection (for half_day and full_day) -->
+          <div id="date-field" class="hidden">
+            <label for="{{ form.booking_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+              {{ form.booking_date.label }} *
+            </label>
+            {{ form.booking_date }}
+            {% if form.booking_date.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.booking_date.errors.0 }}</div>
+            {% endif %}
           </div>
+
+          <!-- Half Day Period Selection -->
+          <div id="half-day-field" class="hidden">
+            <label for="{{ form.half_day_period.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+              {{ form.half_day_period.label }} *
+            </label>
+            {{ form.half_day_period }}
+            {% if form.half_day_period.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.half_day_period.errors.0 }}</div>
+            {% endif %}
+            <p class="text-xs text-gray-500 mt-1">صباح: 8 ص - 2 م | مساء: 2 م - 8 م</p>
+          </div>
+
 
           <!-- Customer Name -->
           <div>
@@ -144,6 +142,15 @@
             {% endif %}
           </div>
 
+          <!-- Price Preview -->
+          <div id="price-preview" class="hidden bg-green-50 border border-green-200 p-4 rounded-lg">
+            <div class="flex justify-between items-center">
+              <span class="text-green-800 font-medium">السعر الإجمالي:</span>
+              <span id="price-value" class="text-2xl font-bold text-green-700">-</span>
+            </div>
+            <p id="price-details" class="text-sm text-green-600 mt-1"></p>
+          </div>
+
           <!-- Price Note -->
           <div class="bg-blue-50 p-4 rounded-lg text-blue-700 text-sm">
             يتم احتساب المبلغ بناءً على نوع الحجز وزمنه وسيظهر في الخطوة التالية.
@@ -161,11 +168,68 @@
         </form>
       </div>
     </div>
+
+    <!-- Other Properties from Same Owner -->
+    {% if owner_properties %}
+    <div class="mt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
+        <h2 class="text-xl font-bold text-gray-900">شاليهات أخرى من نفس المالك</h2>
+        <div class="flex-1 h-px bg-gradient-to-r from-gray-200 to-transparent"></div>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {% for prop in owner_properties %}
+        <a href="{% url 'booking:create_property_booking' property_id=prop.id %}" class="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-blue-300 hover:-translate-y-2">
+          <!-- Image Container -->
+          <div class="relative aspect-[4/3] overflow-hidden">
+            {% if prop.main_image %}
+              <img src="{{ prop.main_image.url }}" alt="{{ prop.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            {% else %}
+              <div class="w-full h-full bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100 flex items-center justify-center">
+                <svg class="w-12 h-12 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 22V12h6v10"/></svg>
+              </div>
+            {% endif %}
+            <!-- Gradient Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <!-- Price Badge -->
+            <div class="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+              <span class="text-sm font-bold text-blue-600">{{ prop.price_per_day|default:0 }} ريال</span>
+            </div>
+            <!-- Hover Action -->
+            <div class="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+              <span class="flex items-center justify-center gap-2 bg-white text-gray-900 px-4 py-2 rounded-xl font-medium text-sm shadow-lg">
+                <span>احجز الآن</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </span>
+            </div>
+          </div>
+          
+          <!-- Content -->
+          <div class="p-4">
+            <h3 class="font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors">{{ prop.name }}</h3>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-500 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                {{ prop.get_property_type_display }}
+              </span>
+              <span class="text-gray-400 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                {{ prop.capacity }}
+              </span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 
 <style>
 input[type="datetime-local"],
+input[type="date"],
 input[type="text"],
 input[type="tel"],
 select {
@@ -177,6 +241,7 @@ select {
   transition: border-color 0.2s;
 }
 input[type="datetime-local"]:focus,
+input[type="date"]:focus,
 input[type="text"]:focus,
 input[type="tel"]:focus,
 select:focus {
@@ -185,4 +250,71 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const bookingTypeSelect = document.getElementById('booking-type-select');
+  const dateField = document.getElementById('date-field');
+  const halfDayField = document.getElementById('half-day-field');
+  const datetimeFields = document.getElementById('datetime-fields');
+  const pricePreview = document.getElementById('price-preview');
+  const priceValue = document.getElementById('price-value');
+  const priceDetails = document.getElementById('price-details');
+
+  // Property prices from Django
+  const priceHalfDay = {{ property.price_half_day|default:0 }};
+  const pricePerDay = {{ property.price_per_day|default:0 }};
+
+  function calculatePrice() {
+    const bookingType = bookingTypeSelect.value;
+    let total = 0;
+    let details = '';
+
+    if (bookingType === 'half_day') {
+      if (priceHalfDay > 0) {
+        total = priceHalfDay;
+        details = 'نصف يوم (6 ساعات)';
+      }
+    } else if (bookingType === 'full_day' || bookingType === 'overnight') {
+      if (pricePerDay > 0) {
+        total = pricePerDay;
+        details = bookingType === 'full_day' ? 'يوم كامل' : 'مبيت';
+      }
+    }
+
+    if (total > 0) {
+      priceValue.textContent = total.toFixed(2) + ' ريال';
+      priceDetails.textContent = details;
+      pricePreview.classList.remove('hidden');
+    } else {
+      pricePreview.classList.add('hidden');
+    }
+  }
+
+  function updateFields() {
+    const bookingType = bookingTypeSelect.value;
+
+    // Hide all first
+    dateField.classList.add('hidden');
+    halfDayField.classList.add('hidden');
+    pricePreview.classList.add('hidden');
+
+    // Show relevant fields based on booking type
+    if (bookingType === 'half_day') {
+      dateField.classList.remove('hidden');
+      halfDayField.classList.remove('hidden');
+    } else if (bookingType === 'full_day' || bookingType === 'overnight') {
+      dateField.classList.remove('hidden');
+    }
+
+    calculatePrice();
+  }
+
+  // Initial update
+  if (bookingTypeSelect) {
+    updateFields();
+    bookingTypeSelect.addEventListener('change', updateFields);
+  }
+});
+</script>
 {% endblock %}

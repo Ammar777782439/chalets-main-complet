@@ -194,10 +194,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
         total_price = 0
         if property_obj and booking_type:
-            if booking_type == 'hourly' and start and end and property_obj.price_per_hour:
-                hours = (end - start).total_seconds() / 3600.0
-                total_price = math.ceil(hours) * float(property_obj.price_per_hour)
-            elif booking_type == 'half_day' and property_obj.price_half_day:
+            if booking_type == 'half_day' and property_obj.price_half_day:
                 total_price = property_obj.price_half_day
             else:
                  total_price = property_obj.price_per_day or 0

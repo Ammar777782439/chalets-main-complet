@@ -4,158 +4,231 @@
 {% block title %}تفاصيل الحجز #{{ booking.id }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-10">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-900">تفاصيل الحجز #{{ booking.id }}</h1>
-      <a href="{% url 'portfolio:owner_bookings' %}" class="px-4 py-2 rounded-lg bg-white border text-gray-700 hover:bg-gray-50">العودة للقائمة</a>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">تفاصيل الحجز</h1>
+        <p class="text-gray-500 mt-1">#{{ booking.id }}</p>
+      </div>
+      <a href="{% url 'portfolio:owner_bookings' %}" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white shadow-sm border text-gray-700 hover:bg-gray-50 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        العودة للقائمة
+      </a>
     </div>
 
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-      <!-- Status Badge -->
-      <div class="p-6 border-b bg-gray-50">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="text-sm text-gray-600">الحالة:</span>
-            <span class="mr-2 px-3 py-1 rounded-full text-sm font-medium {% if booking.status == 'confirmed' %}bg-green-100 text-green-700{% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
-              {{ booking.get_status_display }}
-            </span>
+    <!-- Status & Actions Card -->
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+      <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl
+              {% if booking.status == 'confirmed' %}bg-green-100 text-green-600{% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-600{% else %}bg-red-100 text-red-600{% endif %}">
+              {% if booking.status == 'confirmed' %}✓{% elif booking.status == 'pending' %}⏳{% else %}✕{% endif %}
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">حالة الحجز</p>
+              <p class="font-semibold text-lg {% if booking.status == 'confirmed' %}text-green-700{% elif booking.status == 'pending' %}text-yellow-700{% else %}text-red-700{% endif %}">
+                {{ booking.get_status_display }}
+              </p>
+            </div>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-3">
             {% if booking.status == 'pending' %}
               <form method="post" action="{% url 'portfolio:owner_booking_approve' pk=booking.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700">اعتماد الحجز</button>
+                <button type="submit" class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-green-600 text-white font-medium hover:bg-green-700 transition shadow-md hover:shadow-lg">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                  اعتماد الحجز
+                </button>
               </form>
               <form method="post" action="{% url 'portfolio:owner_booking_cancel' pk=booking.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">إلغاء الحجز</button>
+                <button type="submit" class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition shadow-md hover:shadow-lg">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  إلغاء الحجز
+                </button>
               </form>
             {% elif booking.status == 'confirmed' %}
               <form method="post" action="{% url 'portfolio:owner_booking_cancel' pk=booking.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">إلغاء الحجز</button>
+                <button type="submit" class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition shadow-md hover:shadow-lg">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  إلغاء الحجز
+                </button>
               </form>
             {% endif %}
           </div>
         </div>
       </div>
 
-      <!-- Booking Details -->
-      <div class="p-6 space-y-6">
-        <!-- Property Info -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-3">معلومات العقار</h2>
-          <div class="bg-gray-50 rounded-lg p-4">
+      <div class="p-6 space-y-8">
+        
+        <!-- Property & Customer Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Property Info -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+              </div>
+              <h2 class="text-lg font-bold text-gray-900">العقار</h2>
+            </div>
             <div class="flex items-start gap-4">
               {% if booking.property.main_image %}
-                <img src="{{ booking.property.main_image.url }}" alt="{{ booking.property.name }}" class="w-24 h-24 rounded-lg object-cover">
+                <img src="{{ booking.property.main_image.url }}" alt="{{ booking.property.name }}" class="w-20 h-20 rounded-xl object-cover shadow-md">
               {% endif %}
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900">{{ booking.property.name }}</h3>
-                <p class="text-sm text-gray-600">{{ booking.property.get_property_type_display }}</p>
-                <a href="{% url 'portfolio:property_detail' slug=booking.property.slug %}" class="text-sm text-blue-600 hover:underline">عرض العقار</a>
+                <h3 class="font-semibold text-gray-900 text-lg">{{ booking.property.name }}</h3>
+                <p class="text-sm text-gray-600 mt-1">{{ booking.property.get_property_type_display }}</p>
+                <a href="{% url 'portfolio:property_detail' slug=booking.property.slug %}" class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-2 font-medium">
+                  عرض العقار
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </a>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Customer Info -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-3">معلومات العميل</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-gray-50 rounded-lg p-4">
-              <span class="text-sm text-gray-600">الاسم:</span>
-              <p class="font-medium text-gray-900">{{ booking.customer_name }}</p>
+          <!-- Customer Info -->
+          <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-100">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              </div>
+              <h2 class="text-lg font-bold text-gray-900">العميل</h2>
             </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <span class="text-sm text-gray-600">رقم الهاتف:</span>
-              <p class="font-medium text-gray-900 direction-ltr text-right">{{ booking.customer_phone }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <span class="text-sm text-gray-600">البريد الإلكتروني:</span>
-              <p class="font-medium text-gray-900">{{ booking.customer_email|default:"غير متوفر" }}</p>
-            </div>
-            <div class="bg-gray-50 rounded-lg p-4">
-              <span class="text-sm text-gray-600">عدد الضيوف:</span>
-              <p class="font-medium text-gray-900">{{ booking.number_of_guests }} ضيف</p>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500 w-20">الاسم:</span>
+                <span class="font-medium text-gray-900">{{ booking.customer_name }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500 w-20">الهاتف:</span>
+                <span class="font-medium text-gray-900 direction-ltr">{{ booking.customer_phone }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500 w-20">البريد:</span>
+                <span class="font-medium text-gray-900 text-sm">{{ booking.customer_email|default:"غير متوفر" }}</span>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Booking Period -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-3">فترة الحجز</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900">فترة الحجز</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {% if booking.start_datetime and booking.end_datetime %}
-              <div class="bg-gray-50 rounded-lg p-4">
-                <span class="text-sm text-gray-600">من:</span>
-                <p class="font-medium text-gray-900">{{ booking.start_datetime|date:'Y-m-d H:i' }}</p>
+              <div class="bg-orange-50 rounded-xl p-4 text-center">
+                <p class="text-xs text-orange-600 mb-1">من</p>
+                <p class="font-semibold text-gray-900">{{ booking.start_datetime|date:'Y-m-d' }}</p>
+                <p class="text-sm text-gray-600">{{ booking.start_datetime|date:'H:i' }}</p>
               </div>
-              <div class="bg-gray-50 rounded-lg p-4">
-                <span class="text-sm text-gray-600">إلى:</span>
-                <p class="font-medium text-gray-900">{{ booking.end_datetime|date:'Y-m-d H:i' }}</p>
+              <div class="bg-orange-50 rounded-xl p-4 text-center">
+                <p class="text-xs text-orange-600 mb-1">إلى</p>
+                <p class="font-semibold text-gray-900">{{ booking.end_datetime|date:'Y-m-d' }}</p>
+                <p class="text-sm text-gray-600">{{ booking.end_datetime|date:'H:i' }}</p>
               </div>
             {% else %}
-              <div class="bg-gray-50 rounded-lg p-4">
-                <span class="text-sm text-gray-600">تاريخ الحجز:</span>
-                <p class="font-medium text-gray-900">{{ booking.booking_date }}</p>
+              <div class="bg-orange-50 rounded-xl p-4 text-center">
+                <p class="text-xs text-orange-600 mb-1">تاريخ الحجز</p>
+                <p class="font-semibold text-gray-900">{{ booking.booking_date }}</p>
               </div>
             {% endif %}
-            <div class="bg-gray-50 rounded-lg p-4">
-              <span class="text-sm text-gray-600">نوع الحجز:</span>
-              <p class="font-medium text-gray-900">{{ booking.get_booking_type_display }}</p>
+            <div class="bg-purple-50 rounded-xl p-4 text-center">
+              <p class="text-xs text-purple-600 mb-1">نوع الحجز</p>
+              <p class="font-semibold text-gray-900">{{ booking.get_booking_type_display }}</p>
             </div>
           </div>
         </div>
 
         <!-- Pricing -->
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-3">التفاصيل المالية</h2>
-          <div class="bg-gray-50 rounded-lg p-4">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-gray-600">المبلغ الإجمالي:</span>
-              <span class="text-2xl font-bold text-gray-900">{{ booking.total_price }} ريال</span>
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-5 border border-green-200">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            {% if booking.payment_set.exists %}
-              <div class="mt-4 pt-4 border-t border-gray-200">
-                <h3 class="text-sm font-semibold text-gray-700 mb-2">حالة الدفع:</h3>
-                {% for payment in booking.payment_set.all %}
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">{{ payment.get_payment_method_display }}</span>
-                    <span class="px-2 py-1 rounded text-xs {% if payment.status == 'completed' %}bg-green-100 text-green-700{% elif payment.status == 'pending' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
-                      {{ payment.get_status_display }}
-                    </span>
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
+            <h2 class="text-lg font-bold text-gray-900">التفاصيل المالية</h2>
           </div>
+          <div class="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm">
+            <span class="text-gray-600">المبلغ الإجمالي</span>
+            <span class="text-3xl font-bold text-green-600">{{ booking.total_price }} <span class="text-lg">ريال</span></span>
+          </div>
+          {% if booking.payment_set.exists %}
+            <div class="mt-4 space-y-2">
+              <h3 class="text-sm font-semibold text-gray-700 mb-2">حالة الدفع:</h3>
+              {% for payment in booking.payment_set.all %}
+                <div class="flex items-center justify-between p-3 bg-white rounded-lg">
+                  <span class="text-gray-600">{{ payment.get_payment_method_display }}</span>
+                  <span class="px-3 py-1 rounded-full text-xs font-medium {% if payment.status == 'completed' %}bg-green-100 text-green-700{% elif payment.status == 'pending' %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                    {{ payment.get_status_display }}
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
         </div>
 
-        <!-- Special Requests -->
-        {% if booking.special_requests %}
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-3">طلبات خاصة</h2>
-          <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-gray-700">{{ booking.special_requests }}</p>
+        <!-- Guest List -->
+        {% if booking.guests.count > 0 %}
+        <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900">قائمة الضيوف</h2>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {% for guest in booking.guests.all %}
+              <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">
+                    {{ guest.name|first }}
+                  </div>
+                  <div>
+                    <p class="font-semibold text-gray-900">{{ guest.name }}</p>
+                    <p class="text-xs text-gray-500">رقم: {{ guest.serial }}</p>
+                  </div>
+                </div>
+                <span class="text-xs font-mono bg-white px-3 py-1.5 rounded-lg shadow-sm text-indigo-600 font-bold">{{ guest.code }}</span>
+              </div>
+            {% endfor %}
           </div>
         </div>
         {% endif %}
 
+        <!-- Special Requests -->
+        {% if booking.special_requests %}
+        <div class="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-2xl p-5 border border-amber-200">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900">طلبات خاصة</h2>
+          </div>
+          <p class="text-gray-700 bg-white p-4 rounded-xl">{{ booking.special_requests }}</p>
+        </div>
+        {% endif %}
+
         <!-- Timestamps -->
-        <div class="pt-4 border-t border-gray-200">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-            <div>
-              <span>تاريخ الإنشاء:</span>
-              <span class="font-medium text-gray-900">{{ booking.created_at|date:'Y-m-d H:i' }}</span>
-            </div>
-            <div>
-              <span>آخر تحديث:</span>
-              <span class="font-medium text-gray-900">{{ booking.updated_at|date:'Y-m-d H:i' }}</span>
-            </div>
+        <div class="flex items-center justify-center gap-8 text-sm text-gray-500 pt-4 border-t border-gray-200">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>تم الإنشاء: {{ booking.created_at|date:'Y-m-d H:i' }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>آخر تحديث: {{ booking.updated_at|date:'Y-m-d H:i' }}</span>
           </div>
         </div>
+
       </div>
     </div>
   </div>

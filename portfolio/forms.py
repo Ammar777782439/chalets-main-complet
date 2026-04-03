@@ -5,6 +5,7 @@ from crispy_forms.layout import Layout, Fieldset, Row, Column, Div, Submit, HTML
 from .models import Property, Amenity, PropertyReview
 from django.db.models import Q
 from .widgets import LocationPickerField
+from django.utils import timezone
 
 
 
@@ -80,84 +81,63 @@ class PropertyReviewForm(forms.ModelForm):
 
 
 class PropertySearchForm(forms.Form):
-    """Filters for Property listing (chalets/gardens/istirahat)."""
+    """فلترة بسيطة للبحث عن العقارات"""
+    
+    # البحث بالنص
     search = forms.CharField(required=False, max_length=200, widget=forms.TextInput(attrs={
         'placeholder': 'ابحث عن شاليه/حديقة/استراحة...',
         'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'
     }), label='البحث')
 
+    # المدينة
+    city = forms.ChoiceField(required=False, choices=[
+        ('', 'كل المدن'),
+        ('Sana\'a', 'صنعاء'),
+        ('Ibb', 'إب'),
+        ('Aden', 'عدن'),
+        ('Taiz', 'تعز'),
+        ('Hodeidah', 'الحديدة'),
+        ('Dhamar', 'ذمار'),
+        ('Amran', 'عمران'),
+        ('Marib', 'مأرب'),
+        ('Hajjah', 'حجة'),
+        ('Al-Mahwit', 'المحويت'),
+        ('Lahj', 'لحج'),
+        ('Abyan', 'أبين'),
+        ('Shabwah', 'شبوة'),
+        ('Al-Bayda', 'البيضاء'),
+        ('Al-Jawf', 'الجوف'),
+        ('Saada', 'صعدة'),
+        ('Socotra', 'سقطرى')
+    ], widget=forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'}), label='المدينة')
+
+    # نوع الحجز (يحدد السعر)
     booking_type = forms.ChoiceField(required=False, choices=[
         ('', 'كل الأنواع'),
-        ('hourly', 'بالساعة'),
         ('half_day', 'نصف يوم'),
         ('full_day', 'يوم كامل'),
         ('overnight', 'مبيت'),
     ], widget=forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'}), label='نوع الحجز')
 
-    start_datetime = forms.DateTimeField(required=False, widget=forms.DateTimeInput(attrs={
-        'type': 'datetime-local',
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'
-    }), label='وقت البدء')
-    end_datetime = forms.DateTimeField(required=False, widget=forms.DateTimeInput(attrs={
-        'type': 'datetime-local',
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'
-    }), label='وقت الانتهاء')
+    # تاريخ الحجز
+    booking_date = forms.DateField(required=False, widget=forms.DateInput(attrs={
+        'type': 'date',
+        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl',
+        'min': timezone.now().strftime('%Y-%m-%d'),
+        'max': (timezone.now() + timezone.timedelta(days=90)).strftime('%Y-%m-%d')
+    }), label='تاريخ الحجز')
 
-    amenities = forms.ModelMultipleChoiceField(
-        queryset=Amenity.objects.all(), required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'}),
-        label='المزايا'
-    )
+    # عدد الأشخاص
+    guests = forms.IntegerField(required=False, min_value=1, widget=forms.NumberInput(attrs={
+        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl',
+        'placeholder': 'عدد الأشخاص'
+    }), label='عدد الضيوف')
 
-    city = forms.ChoiceField(required=False, choices=[
-        ('', 'كل المدن'), ('Sana\'a', 'صنعاء'), ('Ibb', 'إب'), ('Aden', 'عدن'), ('Taiz', 'تعز'), ('Hodeidah', 'الحديدة')
-    ], widget=forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'}), label='المدينة')
-
-    radius_km = forms.IntegerField(required=False, min_value=1, max_value=100, widget=forms.NumberInput(attrs={
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl', 'placeholder': '10'
-    }), label='نطاق البحث (كم)')
-
-    min_privacy = forms.IntegerField(required=False, min_value=1, max_value=5, widget=forms.NumberInput(attrs={
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl', 'placeholder': '1-5'
-    }), label='أدنى خصوصية')
-
-    is_verified_by_platform = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={}), label='عرض المعتمد فقط')
-
-    min_price = forms.DecimalField(required=False, min_value=0, decimal_places=2, widget=forms.NumberInput(attrs={
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl', 'placeholder': 'حد أدنى'
-    }), label='السعر الأدنى')
-    max_price = forms.DecimalField(required=False, min_value=0, decimal_places=2, widget=forms.NumberInput(attrs={
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl', 'placeholder': 'حد أقصى'
-    }), label='السعر الأعلى')
-
-    min_capacity = forms.IntegerField(required=False, min_value=1, widget=forms.NumberInput(attrs={
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl', 'placeholder': 'الحد الأدنى للسعة'
-    }), label='السعة الدنيا')
-    max_capacity = forms.IntegerField(required=False, min_value=1, widget=forms.NumberInput(attrs={
-        'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl', 'placeholder': 'الحد الأعلى للسعة'
-    }), label='السعة العليا')
-
-    ordering = forms.ChoiceField(required=False, choices=[
-        ('name', 'الاسم (أ-ي)'), ('-name', 'الاسم (ي-أ)'),
-        ('price', 'السعر (الأقل أولاً)'), ('-price', 'السعر (الأعلى أولاً)'),
-        ('rating', 'التقييم (الأعلى أولاً)'), ('-rating', 'التقييم (الأدنى أولاً)'),
-        ('-created_at', 'الأحدث أولاً')
-    ], widget=forms.Select(attrs={'class': 'w-full px-4 py-3 border-2 border-gray-200 rounded-xl'}), label='ترتيب حسب')
+    # عرض المعتمد فقط (hidden field for toggle)
+    verified_only = forms.BooleanField(required=False, widget=forms.HiddenInput(), initial=False)
 
     def clean(self):
         cleaned = super().clean()
-        start = cleaned.get('start_datetime')
-        end = cleaned.get('end_datetime')
-        if start and end and end <= start:
-            raise forms.ValidationError('وقت الانتهاء يجب أن يكون بعد وقت البدء')
-        min_price = cleaned.get('min_price')
-        max_price = cleaned.get('max_price')
-        if min_price and max_price and min_price > max_price:
-            raise forms.ValidationError('الحد الأدنى للسعر يجب أن يكون أقل من الحد الأعلى')
-        min_capacity = cleaned.get('min_capacity')
-        max_capacity = cleaned.get('max_capacity')
-        if min_capacity and max_capacity and min_capacity > max_capacity:
-            raise forms.ValidationError('الحد الأدنى للسعة يجب أن يكون أقل من الحد الأعلى')
         return cleaned
 
 

@@ -61,7 +61,6 @@ class Booking(models.Model):
     start_datetime = models.DateTimeField(null=True, blank=True, verbose_name="وقت البدء")
     end_datetime = models.DateTimeField(null=True, blank=True, verbose_name="وقت الانتهاء")
     BOOKING_TYPE_CHOICES = [
-        ('hourly', 'بالساعة'),
         ('half_day', 'نصف يوم'),
         ('full_day', 'يوم كامل'),
         ('overnight', 'مبيت'),
