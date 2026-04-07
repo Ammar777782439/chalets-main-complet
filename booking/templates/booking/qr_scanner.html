@@ -16,8 +16,8 @@
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
       <div class="text-center">
         <div id="scanner-container" class="relative mx-auto" style="max-width: 500px;">
-          <video id="video" class="w-full rounded-lg" style="display: none;"></video>
-          <canvas id="canvas" class="w-full rounded-lg" style="display: none;"></canvas>
+          <!-- Html5Qrcode يحتاج حاوية <div> ليحقن داخلها فيديو الكاميرا -->
+          <div id="scanner-reader" class="w-full rounded-lg overflow-hidden bg-black aspect-video"></div>
           
           <!-- Start Scanner Button -->
           <div id="start-scanner" class="text-center py-12">
@@ -103,7 +103,7 @@ function startScanner() {
   document.getElementById('start-scanner').classList.add('hidden');
   document.getElementById('scanner-active').classList.remove('hidden');
   
-  html5QrCode = new Html5Qrcode("scanner-video");
+  html5QrCode = new Html5Qrcode("scanner-reader");
   
   Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {

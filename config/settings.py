@@ -195,6 +195,8 @@ TAILWIND_APP_NAME = 'theme'
 # Internal IPs for django-browser-reload
 INTERNAL_IPS = [
     '127.0.0.1',
+    "192.168.1.8"
+
 ]
 
 # Default primary key field type
